@@ -6,17 +6,21 @@ Ez a projekt egy asztali alkalmazás, amely **React**, **Vite**, **Electron**, *
 
 ## Kezdés
 
-### [1. Klónozd a projektet]
+### 1. Klónozd a projektet
 
 ```bash
 git clone <repository_url>
 cd <project_folder>
 
+#Telepítsd a függőségeket
 # Vite és React plugin
 npm install vite @vitejs/plugin-react --save-dev
 
 # Electron
 npm install electron
+
+# Párhuzamos futtatáshoz
+npm install -D concurrently wait-on
 
 # Excel kezeléshez
 npm install xlsx
@@ -27,17 +31,23 @@ npm install better-sqlite3
 # Bootstrap stílusokhoz
 npm install bootstrap
 
+#main.jsx fájlban a stílushoz:
+import 'bootstrap/dist/css/bootstrap.min.css';
 
-main.jsx fájlban: import 'bootstrap/dist/css/bootstrap.min.css';
+#package.json-ban legyen benne:
+[
+ "scripts": {"start": "electron ."}
+]
 
-package.json-ban legyen benne: "scripts": {"start": "electron ."}
 
-majd futtasd: npm run electron vagy npm run dev
+# fejlesztői mód futtatás: React + Electron egyszerre
+npm run dev
 
 
 ###Build készítése electron-builddel:
 npm run build
 
-Alkalmazás inditása kész buildből: npm start
+# kész build futtatása
+npm run start
 
 ```
