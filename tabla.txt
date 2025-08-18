@@ -1,0 +1,509 @@
+import React, { useState, useEffect } from "react";
+import './App.css'; // Assuming you have some styles for the Input component
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+function Input() {
+  const [aircrafts, setAircrafts] = useState([]);
+  const [airports, setAirports] = useState([]);
+  const [schedules, setSchedules] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [formData, setFormData] = useState({
+    aircraft: "",
+    airport: "",
+    event: "",
+    start: "",
+    end: "",
+  });
+
+  useEffect(() => {
+    async function fetchSchedules() {
+      const list = await window.api.getSchedules();
+      setSchedules(list);
+    }
+    fetchSchedules();
+  }, []);
+
+  useEffect(() => {
+    async function fetchAircrafts() {
+      const list = await window.api.getAircrafts();
+      setAircrafts(list);
+    }
+    fetchAircrafts();
+  }, []);
+
+  useEffect(() => {
+    async function fetchAirports() {
+      const list = await window.api.getAirports();
+      setAirports(list);
+    }
+    fetchAirports();
+  }, []);
+
+  // Státuszok betöltése
+  useEffect(() => {
+    async function fetchEvents() {
+      const list = await window.api.getStatuses();
+      setEvents(list);
+    }
+    fetchEvents();
+  }, []);
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  }
+
+  async function handleSave() {
+    if (
+      !formData.aircraft ||
+      !formData.event ||
+      !formData.start ||
+      !formData.end
+    ) {
+      alert("Minden kötelező mezőt tölts ki!");
+      return;
+    }
+
+    await window.api.addSchedule(
+      formData.aircraft,
+      formData.airport,
+      formData.event,
+      formData.start,
+      formData.end
+    );
+
+    // újra lekérjük az adatokat
+    const updated = await window.api.getSchedules();
+    setSchedules(updated);
+
+    // ürítjük a formot
+    setFormData({
+      aircraft: "",
+      airport: "",
+      event: "",
+      start: "",
+      end: "",
+    });
+  }
+
+  
+  // lapozáshoz state-ek
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // Lapozáshoz szükséges adatok
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const currentRows = schedules.slice(indexOfFirstRow, indexOfLastRow);
+  const totalPages = Math.ceil(schedules.length / rowsPerPage);
+
+  return (
+    <>
+      <table className="table table-bordered table-striped">
+        <thead>
+          <tr className="table-primary">
+            <th>Gép azonosító</th>
+            <th>Reptér</th>
+            <th>Event</th>
+            <th>Kezdés időpont</th>
+            <th>Vége időpont</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <select
+                name="aircraft"
+                id="aircraft"
+                value={formData.aircraft}
+                onChange={handleChange}
+              >
+                <option value="">Válassz gépet</option>
+                {aircrafts.map((aircraft) => (
+                  <option key={aircraft.name} value={aircraft.name}>
+                    {aircraft.name}
+                  </option>
+                ))}
+              </select>
+            </td>
+            <td>
+              <select
+                name="airport"
+                id="airport"
+                value={formData.airport}
+                onChange={handleChange}
+              >
+                <option value="">Válassz repteret</option>
+                {airports.map((airport) => (
+                  <option key={airport.repter_id} value={airport.repter_id}>
+                    {airport.repter_id}
+                  </option>
+                ))}
+              </select>
+            </td>
+            <td>
+              <select
+                name="event"
+                id="event"
+                value={formData.event}
+                onChange={handleChange}
+              >
+                <option value="">Válassz eseményt</option>
+                {events.map((event) => (
+                  <option key={event.jelkod} value={event.jelkod}>
+                    {event.jelentes}
+                  </option>
+                ))}
+              </select>
+            </td>
+            <td>
+              <input
+              id="start"
+              type="datetime-local"
+                name="start"
+                value={formData.start}
+                onChange={handleChange}
+              />
+            </td>
+            <td>
+              <input
+              id="end"
+                type="datetime-local"
+                name="end"
+                value={formData.end}
+                onChange={handleChange}
+              />
+            </td>
+            <td>
+              <button className="btn btn-primary" onClick={handleSave}>Mentés</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table className="table table-bordered table-striped">
+        <thead>
+          <tr className="table-secondary">
+            <th>Gép azonosító</th>
+            <th>Reptér</th>
+            <th>Dátum</th>
+            <th>Esemény</th>
+            <th>Kezdés időpont</th>
+            <th>Vége időpont</th>
+          </tr>
+        </thead>
+        <tbody>
+          {schedules.map((schedule, index) => (
+            <tr key={index}>
+              <td>{schedule.gep_azonosito}</td>
+              <td>{schedule.megjegyzes}</td>
+              <td>{schedule.datum}</td>
+              <td  className={ schedule.tevekenyseg_kod }>{schedule.tevekenyseg_kod}</td>
+              <td>{schedule.kezdes_idopont}</td>
+              <td>{schedule.vege_idopont}</td>
+              <td>
+                <button
+                  className="btn btn-danger"
+                  onClick={async () => {
+                    await window.api.deleteSchedule(schedule.esemeny_id);
+                    setSchedules(await window.api.getSchedules()); // frissítés törlés után
+                  }}
+                >
+                  Törlés
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
+}
+export default Input;
+
+
+
+
+
+=========================================================7
+
+/*
+
+db.prepare(`CREATE TABLE IF NOT EXISTS aircrafts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL unique,
+    type TEXT NOT NULL,
+    fogyasztas INTEGER DEFAULT 0
+)`).run();
+
+db.prepare(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user'
+)`).run();
+
+db.prepare(`CREATE TABLE IF NOT EXISTS statuses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    jelkod TEXT NOT NULL,
+    jelentes TEXT NOT NULL,
+    color TEXT NOT NULL
+  )`).run();
+
+db.prepare(`CREATE TABLE IF NOT EXISTS data_table (
+    esemeny_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    gep_azonosito TEXT NOT NULL,
+    datum TEXT NOT NULL,
+    kezdes_idopont TEXT NOT NULL,
+    vege_idopont TEXT NOT NULL,
+    idotartam_perc INTEGER NOT NULL,
+    tevekenyseg_kod TEXT NOT NULL,
+    megjegyzes TEXT,
+    FOREIGN KEY (gep_azonosito) REFERENCES aircrafts(name)
+  )`).run();
+
+  db.prepare(`CREATE TABLE IF NOT EXISTS airports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    repter TEXT NOT NULL,
+    repter_id text NOT NULL,
+    nyitvatartas TEXT
+  )`).run();
+
+  db.prepare(`
+  INSERT OR IGNORE INTO airports (repter, repter_id) VALUES
+  ('Nagyvárad Reptér', 'LROD'),
+  ('Debrecen Nemzetközi Repülőtér', 'LHDC');
+`).run();
+
+db.prepare(`
+  INSERT OR IGNORE INTO aircrafts (name, type, fogyasztas) VALUES
+  ('HA-ENI', 'Tecnam P2006T', 40),
+  ('HA-ENM', 'Tecnam P2006T', 40),
+  ('HA-ENJ', 'Tecnam P2008JC', 20),
+  ('HA-ENK', 'Tecnam P2008JC', 20),
+  ('HA-ENL', 'Tecnam P2008JC', 20),
+  ('HA-ENY', 'Tecnam P2006T', 40);
+`).run();
+
+
+  db.prepare(`
+    INSERT OR IGNORE INTO statuses (jelkod, jelentes, color) VALUES
+    ('m', 'API szerint zárva', '#cdcdcd'),
+    ('z', 'repülőtér', '#f4b400'),
+    ('n', 'NOTAM', '#fb170f'),
+    ('s', 'korai sötétedés', '#434343'),
+    ('at', 'repülés lemondás (ATO, oktató)', '#f7e55cff'),
+    ('d', 'repülés lemondás (Diák)', '#b04ab7'),
+    ('dh', 'diákok haladási fázisa', '#f8c3f3'),
+    ('cs', 'személyzet csere', '#fae3af'),
+    ('o', 'kevés/nincs elérhető oktató', '#6c7bb1'),
+    ('sz', 'munkaszüneti nap', '#d1a587'),
+    ('a', 'repülésre alkalmatlan időjárás', '#d8736a'),
+    ('k', 'karbantartáson volt', '#8fb2cd'),
+    ('r', 'repült', '#66b65b')
+  `).run();
+
+
+// --- Adatbázis előkészítése ---
+function seedFromCSV() {
+  const filePath = path.join(__dirname, 'proba_adatok.csv');
+  const workbook = xlsx.readFile(filePath, { type: 'file', cellDates: true });
+  const sheetName = workbook.SheetNames[0];
+  const rows = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { raw: true, defval: null });
+
+
+  const insertData = db.prepare(`
+    INSERT INTO data_table
+      (gep_azonosito, datum, kezdes_idopont, vege_idopont, idotartam_perc, tevekenyseg_kod, megjegyzes)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const pad = (n) => String(n).padStart(2, '0');
+
+  db.transaction(() => {
+    for (const row of rows) {
+      const gepAzonosito = row["gep_azonosito"];
+      const datum = formatHungarianDate(row["datum"]);
+      const kezdes = formatHungarianTime(row["kezdes_idopont"]);
+      const vege = formatHungarianTime(row["vege_idopont"]);
+      const idotartam = parseFloat(String(row["idotartam_perc"] || "0").replace(",", "."));
+      const tevekenyseg = row["tevekenyseg_kod"];
+      const megjegyzes = row["megjegyzes"] || null;
+
+      insertData.run(gepAzonosito, datum, kezdes, vege, idotartam, tevekenyseg, megjegyzes);
+    }
+  })();
+
+  console.log("CSV-ből feltöltés kész!");
+}
+
+
+function formatHungarianDate(val) {
+  if (typeof val === 'number') {
+    const date = xlsx.SSF.parse_date_code(val);
+    if (!date) return val;
+    return `${date.y}.${pad(date.m)}.${pad(date.d)}`;
+  }
+  const d = new Date(val);
+  if (!isNaN(d)) {
+    return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`;
+  }
+  return val;
+}
+
+function formatHungarianTime(val) {
+  if (typeof val === 'number') {
+    const date = xlsx.SSF.parse_date_code(val);
+    return `${pad(date.H)}:${pad(date.M)}:${pad(Math.floor(date.S))}`;
+  }
+  const d = new Date(`1970-01-01T${val}`);
+  if (!isNaN(d)) {
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }
+  return val;
+}
+
+function pad(n) {
+  return String(n).padStart(2, '0');
+}
+
+
+seedFromCSV();*/
+
+
+
+======================================================77
+EDITOR
+
+import React from 'react'
+import {useState, useEffect} from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+const Editor = () => {
+    const [aircrafts, setAircrafts] = useState([]);
+    const [statuses, setStatuses] = useState([]);
+    const [airports, setAirports] = useState([]);
+    const [users, setUsers] = useState([]);
+
+    useEffect(() => {
+        async function fetchAircrafts() {
+            const list = await window.api.getAircrafts();
+            setAircrafts(list);
+        }
+        fetchAircrafts();
+    }, []);
+
+    useEffect(() => {
+        async function fetchStatuses() {
+            const list = await window.api.getStatuses();
+            setStatuses(list);
+        }
+        fetchStatuses();
+    }, []);
+    useEffect(() => {
+        async function fetchAirports() {
+            const list = await window.api.getAirports();
+            setAirports(list);
+        }
+        fetchAirports();
+    }, []);
+
+    useEffect(() => {
+        async function fetchUsers() {
+            const list = await window.api.getUsers();
+            setUsers(list);
+        }
+        fetchUsers();
+    }, []);
+
+
+
+  return (
+    <>
+        <h2>Aircraft Editor</h2>
+        <table className='table table-sm table-striped m-1'>
+            <thead className='thead-dark'>
+            <tr className='text-center'>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Consumption</th>
+            </tr>
+            </thead>
+            <tbody>
+            {aircrafts.map((aircraft, index) => (
+                <tr key={index}>
+                <td>{aircraft.name}</td>
+                <td>{aircraft.type}</td>
+                <td>{aircraft.fogyasztas}</td>
+                </tr>
+            ))}
+            </tbody>
+        </table>
+
+        <h2>Status Editor</h2>
+        <table className='table table-sm table-striped'>
+            <thead className='thead-dark '>
+            <tr className='text-center'>
+                <th>Code</th>
+                <th>Description</th>
+                <th>Color</th>
+            </tr>
+            </thead>
+            <tbody>
+            {statuses.map((status, index) => (
+                <tr key={index}>
+                <td>{status.jelkod}</td>
+                <td>{status.jelentes}</td>
+                <td style={{ backgroundColor: status.color }}>{status.color}</td>
+                </tr>
+            ))}
+            </tbody>
+        </table>
+        <h2>Airport Editor</h2>
+        <table className='table table-sm table-striped'>
+            <thead className='thead-dark '>
+            <tr className='text-center'>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Opening Hours</th>
+            </tr>
+            </thead>
+            <tbody>
+            {airports.map((airport, index) => (
+                <tr key={index}>
+                <td>{airport.repter}</td>
+                <td>{airport.repter_id}</td>
+                <td>{airport.nyitvatartas}</td>
+                </tr>
+            ))}
+            </tbody>
+        </table>
+        <h2>User Editor</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Role</th>
+            </tr>
+            </thead>
+            <tbody>
+            {users.map((user, index) => (
+                <tr key={index}>
+                <td>{user.username}</td>
+                <td>{user.password}</td>
+                <td>{user.role}</td>
+                </tr>
+            ))}
+            </tbody>
+        </table>
+    </>
+  )
+}
+
+export default Editor
+
+
