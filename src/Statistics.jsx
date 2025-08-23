@@ -79,10 +79,11 @@ function Statistics({ selectedAircraft }) {
     // Eredmény tömb (rendezve darab szerint)
     const rows = statuses.map((s) => {
       const count = statusCounts.get(s.jelkod) || 0;
-      const percent = total ? Math.round((count / total) * 100) : 0;
+      const percent = total ? ((count / total) * 100).toFixed(1) : 0;
+
       return {
         jelkod: s.jelkod,
-        megnevezes: s.megnevezes ?? "",
+        megnevezes: s.jelentes ?? "",
         count,
         percent,
       };
@@ -134,7 +135,7 @@ function Statistics({ selectedAircraft }) {
             <tbody>
               {rows.map((row) => (
                 <tr key={row.jelkod}>
-                  <td>{row.jelkod}</td>
+                  <td className={row.jelkod}>{row.megnevezes}</td>
                   <td>{row.count}</td>
                   <td>{row.percent}%</td>
                 </tr>
