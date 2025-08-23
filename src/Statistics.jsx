@@ -93,16 +93,37 @@ function Statistics({ selectedAircraft }) {
     return { rows, total };
   }
 
-  return (
-  <>
+ return (
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+      gap: "1rem",
+    }}
+  >
     {months.map((month, idx) => {
       const { rows, total } = getMonthlyStatusStats(idx);
       return (
         <div
           key={month}
+          style={{
+            border: "1px solid #ccc",
+            borderRadius: "8px",
+            padding: "0.5rem",
+            backgroundColor: "#fafafa",
+          }}
         >
           <h4 style={{ textAlign: "center", fontSize: "1rem" }}>{month}</h4>
-          <table>
+          <table
+            className="table table-sm"
+            border="1"
+            cellPadding="2"
+            style={{
+              width: "100%",
+              fontSize: "0.85rem",
+              textAlign: "center",
+            }}
+          >
             <thead>
               <tr>
                 <th>Státusz</th>
@@ -128,8 +149,9 @@ function Statistics({ selectedAircraft }) {
         </div>
       );
     })}
-  </>
+  </div>
 );
+
 
 
 }
