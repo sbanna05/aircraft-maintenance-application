@@ -3,6 +3,7 @@ import './App.css';
 import Statistics from './Statistics';
 import Input from './Input';
 import Editor from './Editor';
+import FullReview from './FullReview';
 
 function App() {
   const [page, setPage] = useState('home'); // kezdetben főoldal
@@ -18,7 +19,7 @@ function App() {
       </div>
 
       {page === 'home' && <Input />}
-      {page === 'statistics' && <Statistics />}
+      {page === 'statistics' && <FullReview />}
       {page === 'editor' && <Editor />}
     </>
   );
