@@ -86,6 +86,8 @@ function getStatusColor(code) {
         ))}
       </div>
 
+      <Statistics selectedAircraft={selectedAircraft}   />
+
       <div className="mb-4">
         <label className="form-label">
           Hónap kiválasztása:

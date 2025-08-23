@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import './App.css';
-import Statistics from './Statistics';
 import Input from './Input';
 import Editor from './Editor';
 import FullReview from './FullReview';
