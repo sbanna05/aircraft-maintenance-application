@@ -51,6 +51,11 @@ function getStatusColor(code) {
   const status = statuses.find(s => s.jelkod === code);
   return status ? status.color : 'transparent';
 }
+function getStatusMeaning(code) {
+  const status = statuses.find(s => s.jelkod === code);
+  return status ? status.jelentes : 'Ismeretlen';
+}
+
   // ---- Naptár mátrix előkészítése ----
   const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
   const days = [...new Set(usageData.map(r => r.datum))]
@@ -102,7 +107,7 @@ function getStatusColor(code) {
       </div>
 
       {usageData.length > 0 ? (
-        <div className="table table-sm">
+        <div className="table table-sm " style={{ overflowX: 'auto' }}>
           <h3 className="mb-3">
             {selectedAircraft} - {month}
           </h3>
@@ -125,6 +130,7 @@ function getStatusColor(code) {
                     <td
                       key={day}
                       style={{ backgroundColor: getStatusColor(row[day]) }}
+                      title={getStatusMeaning(row[day])}
                     >
                       {row[day]}
                     </td>
@@ -141,5 +147,6 @@ function getStatusColor(code) {
 </>
   );
 }
+
 
 export default FullReview;
