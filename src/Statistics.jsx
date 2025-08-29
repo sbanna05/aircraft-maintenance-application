@@ -89,7 +89,7 @@ function Statistics({ selectedAircraft }) {
       };
     });
 
-    rows.sort((a, b) => b.count - a.count);
+    //rows.sort((a, b) => b.count - a.count);
 
     return { rows, total };
   }

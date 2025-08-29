@@ -13,6 +13,7 @@ function Input() {
     event: "",
     start: "",
     end: "",
+    note: "",
   });
 
   useEffect(() => {
@@ -72,7 +73,8 @@ function Input() {
       formData.airport,
       formData.event,
       formData.start,
-      formData.end
+      formData.end,
+      formData.note
     );
 
     // újra lekérjük az adatokat
@@ -86,6 +88,7 @@ function Input() {
       event: "",
       start: "",
       end: "",
+      note: "",
     });
   }
 
@@ -110,6 +113,8 @@ function Input() {
             <th>Event</th>
             <th>Kezdés időpont</th>
             <th>Vége időpont</th>
+            <th>Megjegyzés</th>
+            <th>Művelet</th>
           </tr>
         </thead>
         <tbody>
@@ -177,6 +182,15 @@ function Input() {
                 onChange={handleChange}
               />
             </td>
+             <td>
+              <input
+              id="note"
+                type="text"
+                name="note"
+                value={formData.note || ""}
+                onChange={handleChange}
+              />
+            </td>
             <td>
               <button className="btn btn-primary" onClick={handleSave}>Mentés</button>
             </td>
@@ -207,23 +221,23 @@ function Input() {
       <table className="table table-bordered table-striped">
         <thead>
           <tr className="table-secondary">
-            <th>Gép azonosító</th>
-            <th>Reptér</th>
+            <th>Gép azonosító</th>            
             <th>Dátum</th>
             <th>Esemény</th>
             <th>Kezdés időpont</th>
             <th>Vége időpont</th>
+            <th>Megjegyzés</th>
           </tr>
         </thead>
         <tbody>
           {currentRows.map((schedule, index) => (
             <tr key={index}>
-              <td>{schedule.gep_azonosito}</td>
-              <td>{schedule.megjegyzes}</td>
+              <td>{schedule.gep_azonosito}</td>              
               <td>{schedule.datum}</td>
-              <td  className={ schedule.tevekenyseg_kod }>{schedule.tevekenyseg_kod}</td>
+              <td>{schedule.tevekenyseg_kod}</td>
               <td>{schedule.kezdes_idopont}</td>
               <td>{schedule.vege_idopont}</td>
+              <td>{schedule.megjegyzes}</td>
               <td>
                 <button
                   className="btn btn-danger btn-sm"

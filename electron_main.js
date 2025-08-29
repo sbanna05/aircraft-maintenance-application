@@ -281,13 +281,14 @@ ipcMain.handle('add-schedule', (event, aircraft, airport, eventCode, start, end)
 });
 */
 
-ipcMain.handle('add-schedule', (event, aircraft, airport, eventCode, start, end) => {
+ipcMain.handle('add-schedule', (event, aircraft, airport, eventCode, start, end, note) => {
   const duration = Math.round((new Date(end) - new Date(start)) / 60000); // percben
   let datum = (start.split('T')[0]).replace(/-/g, '.'); // csak a dátum részt vesszük
   
   // idő részek külön (HH:MM:SS)
   /*let startTime = start.split('T')[1] + ":00";
   let endTime = end.split('T')[1] + ":00"; */
+  const finalNote = [airport, note].filter(Boolean).join(" - ");
 
   let startTime = `${parseInt(start.split('T')[1].split(':')[0], 10)}:${start.split('T')[1].split(':')[1]}:00`;
   let endTime   = `${parseInt(end.split('T')[1].split(':')[0], 10)}:${end.split('T')[1].split(':')[1]}:00`;
@@ -301,7 +302,7 @@ ipcMain.handle('add-schedule', (event, aircraft, airport, eventCode, start, end)
 
   return stmt.run(
     aircraft,   // gép azonosító
-    airport,    // reptér neve ide kerül, megjegyzésként
+    finalNote || null,    // reptér neve ide kerül, megjegyzésként
     eventCode,  // esemény kód
     datum,
     startTime,   // kezdés

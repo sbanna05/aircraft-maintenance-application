@@ -8,7 +8,7 @@ contextBridge.exposeInMainWorld('api', {
   getUsers: () => ipcRenderer.invoke('get-users'),
   
   addAircraft: (name, type, consumption) => ipcRenderer.invoke('add-aircraft', name, type, consumption),
-  addSchedule: (aircraft, airport, event, start, end) => ipcRenderer.invoke('add-schedule', aircraft, airport, event, start, end),
+  addSchedule: (aircraft, airport, event, start, end, note) => ipcRenderer.invoke('add-schedule', aircraft, airport, event, start, end, note),
   addStatus: (code, description, color) => ipcRenderer.invoke('add-status', code, description, color),
   addUser: (username, password, role) => ipcRenderer.invoke('add-user', username, password, role),
   
