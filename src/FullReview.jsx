@@ -45,7 +45,7 @@ useEffect(() => {
     setStatuses(list);
   }
   fetchStatuses();
-}, [statuses]);
+}, []);
 
 function getStatusColor(code) {
   const status = statuses.find(s => s.jelkod === code);

@@ -16,38 +16,22 @@ function Input() {
     note: "",
   });
 
-  useEffect(() => {
-    async function fetchSchedules() {
-      const list = await window.api.getSchedules();
-      setSchedules(list);
-    }
-    fetchSchedules();
-  }, []);
+   useEffect(() => {
+  async function fetchAll() {
+    const [schedules, aircrafts, airports, events] = await Promise.all([
+      window.api.getSchedules(),
+      window.api.getAircrafts(),
+      window.api.getAirports(),
+      window.api.getStatuses(),
+    ]);
+    setSchedules(schedules);
+    setAircrafts(aircrafts);
+    setAirports(airports);
+    setEvents(events);
+  }
+  fetchAll();
+}, []);
 
-  useEffect(() => {
-    async function fetchAircrafts() {
-      const list = await window.api.getAircrafts();
-      setAircrafts(list);
-    }
-    fetchAircrafts();
-  }, []);
-
-  useEffect(() => {
-    async function fetchAirports() {
-      const list = await window.api.getAirports();
-      setAirports(list);
-    }
-    fetchAirports();
-  }, []);
-
-  // Státuszok betöltése
-  useEffect(() => {
-    async function fetchEvents() {
-      const list = await window.api.getStatuses();
-      setEvents(list);
-    }
-    fetchEvents();
-  }, []);
 
   function handleChange(event) {
     const { name, value } = event.target;
