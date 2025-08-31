@@ -61,16 +61,23 @@ function getStatusMeaning(code) {
   const days = [...new Set(usageData.map(r => r.datum))]
     .sort((a, b) => new Date(a) - new Date(b));
 
-  const calendarMatrix = hours.map(hour => {
+ const calendarMatrix = hours.map(hour => {
     const row = { hour };
+    const hourInt = parseInt(hour.split(':')[0], 10);
+
     days.forEach(day => {
-      const match = usageData.find(
-        r => r.datum === day && r.kezdes_idopont.startsWith(hour)
+      const match = usageData.find(r =>
+          {
+            const startHour = parseInt(r.kezdes_idopont.split(':')[0], 10);
+            const endHour = parseInt(r.vege_idopont.split(':')[0], 10);
+            return r.datum === day && hourInt >= startHour && hourInt < endHour;
+          }
       );
       row[day] = match ? match.tevekenyseg_kod : '';
     });
     return row;
   });
+
 
  return (
     <>
