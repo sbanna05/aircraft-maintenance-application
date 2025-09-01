@@ -69,7 +69,8 @@ function getStatusMeaning(code) {
       const match = usageData.find(r =>
           {
             const startHour = parseInt(r.kezdes_idopont.split(':')[0], 10);
-            const endHour = parseInt(r.vege_idopont.split(':')[0], 10);
+            const endHourRaw = parseInt(r.vege_idopont.split(':')[0], 10);
+            const endHour = (endHourRaw === 0 && r.vege_idopont === "0:00:00") ? 24 : endHourRaw;
             return r.datum === day && hourInt >= startHour && hourInt < endHour;
           }
       );

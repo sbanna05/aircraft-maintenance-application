@@ -52,14 +52,20 @@ function Input() {
       return;
     }
 
-    await window.api.addSchedule(
-      formData.aircraft,
-      formData.airport,
-      formData.event,
-      formData.start,
-      formData.end,
-      formData.note
-    );
+    const result = await window.api.addSchedule(
+    formData.aircraft,
+    formData.airport,
+    formData.event,
+    formData.start,
+    formData.end,
+    formData.note
+  );
+
+    if (!result.success) {
+    alert("Átfedés történt az alábbi időpontokkal:\n" + 
+      result.conflicts.map(c => `${c.datum} ${c.startTime}-${c.endTime}`).join('\n'));
+    return;
+  }
 
     // újra lekérjük az adatokat
     const updated = await window.api.getSchedules();
