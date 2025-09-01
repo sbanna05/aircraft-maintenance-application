@@ -63,7 +63,7 @@ function Input() {
 
     if (!result.success) {
     alert("Átfedés történt az alábbi időpontokkal:\n" + 
-      result.conflicts.map(c => `${c.datum} ${c.startTime}-${c.endTime}`).join('\n'));
+      result.conflicts.map(c => `${c.event_id} ${c.jelkod}`).join('\n'));
     return;
   }
 
