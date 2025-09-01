@@ -211,28 +211,27 @@ function Input() {
       <table className="table table-bordered table-striped">
         <thead>
           <tr className="table-secondary">
-            <th>Gép azonosító</th>            
-            <th>Dátum</th>
-            <th>Esemény</th>
-            <th>Kezdés időpont</th>
-            <th>Vége időpont</th>
+            <th>Gép</th>
+            <th>Reptér</th>
+            <th>Időpont</th>
+            <th>Státusz</th>
             <th>Megjegyzés</th>
+            <th>Művelet</th>
           </tr>
         </thead>
         <tbody>
           {currentRows.map((schedule, index) => (
             <tr key={index}>
-              <td>{schedule.gep_azonosito}</td>              
-              <td>{schedule.datum}</td>
-              <td>{schedule.tevekenyseg_kod}</td>
-              <td>{schedule.kezdes_idopont}</td>
-              <td>{schedule.vege_idopont}</td>
-              <td>{schedule.megjegyzes}</td>
+              <td>{schedule.aircraft}</td>
+              <td>{schedule.airport}</td>
+              <td>{schedule.event_timestamp}</td>
+              <td>{schedule.status}</td>
+              <td>{schedule.note}</td>
               <td>
                 <button
                   className="btn btn-danger btn-sm"
                   onClick={async () => {
-                    await window.api.deleteSchedule(schedule.esemeny_id);
+                    await window.api.deleteSchedule(schedule.event_id);
                     setSchedules(await window.api.getSchedules()); // frissítés törlés után
                   }}
                 >
@@ -242,7 +241,8 @@ function Input() {
             </tr>
           ))}
         </tbody>
-      </table>
+</table>
+
 
       {/* Lapozás */}
       {/* --- Lapozó --- */}

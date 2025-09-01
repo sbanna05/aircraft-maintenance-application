@@ -213,44 +213,43 @@ ipcMain.handle('get-airports', () => {
   return stmt.all();
 });
 
-/*
-ipcMain.handle('get-schedules', (event, gepAzonosito, yearMonth) => {
+
+
+ipcMain.handle('get-schedules', (event, aircraftName, yearMonth) => {
   let query = `
-    SELECT * FROM data_table
-    WHERE gep_azonosito = ?
+    SELECT 
+      s.event_id,
+      s.event_timestamp,
+      s.created,
+      s.note,
+      a.name AS aircraft,
+      ap.repter_id AS airport,
+      st.jelkod AS status
+    FROM schedules s
+    LEFT JOIN aircrafts a ON s.aircraft_id = a.id
+    LEFT JOIN airports ap ON s.airport_id = ap.id
+    LEFT JOIN statuses st ON s.status_id = st.id
+    WHERE 1=1
   `;
-  const params = [gepAzonosito];
-
-  if (yearMonth) {
-    query += ` AND datum LIKE ?`;
-    params.push(yearMonth);  // pl: '5/%/25'
-  }
-  query += ' ORDER BY datum, kezdes_idopont';
-
-  const stmt = db.prepare(query);
-  return stmt.all(...params);
-});
-*/
-
-ipcMain.handle('get-schedules', (event, gepAzonosito, yearMonth) => {
-  let query = `SELECT * FROM data_table WHERE 1=1`;
   const params = [];
 
-  if (gepAzonosito) {
-    query += ` AND gep_azonosito = ?`;
-    params.push(gepAzonosito);
+  if (aircraftName) {
+    query += ` AND a.name = ?`;
+    params.push(aircraftName);
   }
 
   if (yearMonth) {
-    query += ` AND datum LIKE ?`;
-    params.push(yearMonth);
+    // pl. '2025-09%' --> minden szeptemberi adat
+    query += ` AND s.event_timestamp LIKE ?`;
+    params.push(`${yearMonth}%`);
   }
 
-  query += ' ORDER BY datum desc, kezdes_idopont desc';
+  query += ' ORDER BY s.event_timestamp DESC';
 
   const stmt = db.prepare(query);
   return stmt.all(...params);
 });
+
 
 
 ipcMain.handle('get-statuses', () => {
@@ -270,45 +269,8 @@ ipcMain.handle('add-aircraft', (event, name, type, consumption) => {
   return stmt.run(name, type, consumption);
 });
 
-/*
-ipcMain.handle('add-schedule', (event, aircraft, airport, eventCode, start, end) => {
-  duration = Math.round((new Date(end) - new Date(start)) / 60000); // percben
-  const stmt = db.prepare(`
-    INSERT INTO data_table (gep_azonosito, megjegyzes, tevekenyseg_kod, kezdes_idopont, vege_idopont, idotartam_perc)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `);
-  return stmt.run(aircraft, airport, eventCode, start, end, duration);
-});
-*/
 
 
-/*
-ipcMain.handle('add-schedule', (event, aircraft, airport, eventCode, start, end, note) => {
-  const duration = Math.round((new Date(end) - new Date(start)) / 60000); // percben
-  let datum = (start.split('T')[0]).replace(/-/g, '.'); // csak a dátum részt vesszük
-  const finalNote = [airport, note].filter(Boolean).join(" - ");
-
-  let startTime = `${parseInt(start.split('T')[1].split(':')[0], 10)}:${start.split('T')[1].split(':')[1]}:00`;
-  let endTime   = `${parseInt(end.split('T')[1].split(':')[0], 10)}:${end.split('T')[1].split(':')[1]}:00`;
-
-  const stmt = db.prepare(`
-    INSERT INTO data_table (
-      gep_azonosito, megjegyzes, tevekenyseg_kod, datum, kezdes_idopont, vege_idopont, idotartam_perc
-    )
-    VALUES (?, ?, ?, ?, ?, ?,?)
-  `);
-
-  return stmt.run(
-    aircraft,   // gép azonosító
-    finalNote || null,    // reptér neve ide kerül, megjegyzésként
-    eventCode,  // esemény kód
-    datum,
-    startTime,   // kezdés
-    endTime,    // vége
-    duration    // időtartam percben
-  );
-});
-*/
 ipcMain.handle('add-schedule', (event, aircraftName, airportCode, eventCode, start, end, note) => {
   const startDate = new Date(start);
   const endDate = new Date(end);
