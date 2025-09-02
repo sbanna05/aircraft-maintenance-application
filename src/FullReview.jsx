@@ -66,16 +66,19 @@ function getStatusMeaning(code) {
     const hourInt = parseInt(hour.split(':')[0], 10);
 
     days.forEach(day => {
-      const match = usageData.find(r =>
-          {
-            const startHour = parseInt(r.kezdes_idopont.split(':')[0], 10);
-            const endHourRaw = parseInt(r.vege_idopont.split(':')[0], 10);
-            const endHour = (endHourRaw === 0 && r.vege_idopont === "0:00:00") ? 24 : endHourRaw;
-            return r.datum === day && hourInt >= startHour && hourInt < endHour;
-          }
-      );
-      row[day] = match ? match.tevekenyseg_kod : '';
+      const match = usageData.find(r => {
+        if (!r.event_timestamp) return false;
+
+        const datum = r.event_timestamp.split(' ')[0]; // "2025.05.12"
+        const time = r.event_timestamp.split(' ')[1]; // "14:00:00"
+        const startHour = parseInt(time.split(':')[0], 10); // 14
+        const endHour = (startHour === 23) ? 24 : startHour + 1;
+
+        return datum === day && hourInt >= startHour && hourInt < endHour;
     });
+      row[day] = match ? match.status : '';
+    });
+    console.log(row);
     return row;
   });
 
@@ -98,8 +101,6 @@ function getStatusMeaning(code) {
           </button>
         ))}
       </div>
-
-      <Statistics selectedAircraft={selectedAircraft}   />
 
       <div className="mb-4">
         <label className="form-label">

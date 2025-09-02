@@ -220,6 +220,7 @@ ipcMain.handle('get-schedules', (event, aircraftName, yearMonth) => {
     SELECT 
       s.event_id,
       s.event_timestamp,
+      substr(s.event_timestamp, 1, 10) AS datum,
       s.created,
       s.note,
       a.name AS aircraft,
@@ -365,3 +366,57 @@ ipcMain.handle('delete-status', (event, id) => {
   return stmt.run(id);
 });
 
+
+
+/*
+//console.log("CSV import kész.");
+const csvPath = path.join(__dirname, "proba_adatok.csv");
+
+// Beolvassuk a CSV-t
+const csvData = fs.readFileSync(csvPath, "utf-8");
+
+// Feldolgozzuk soronként
+const lines = csvData.split("\n").filter(Boolean);
+
+lines.forEach((line) => {
+  // Feltételezzük, hogy ;-vel vannak elválasztva
+  const [id, aircraftName, date, startTime, endTime, duration, statusCode] =
+    line.split(";").map((s) => s.trim());
+
+  // Lekérjük az azonosítókat
+  const aircraftRow = db.prepare(`SELECT id FROM aircrafts WHERE name = ?`).get(aircraftName);
+  if (!aircraftRow) {
+    console.warn(`Aircraft not found: ${aircraftName}, sor: ${id}`);
+    return;
+  }
+  const aircraftId = aircraftRow.id;
+
+  // Airport ID (ha van, pl HA-ENI)
+  const airportRow = db.prepare(`SELECT id FROM airports WHERE repter_id = ?`).get(aircraftName);
+  const airportId = airportRow ? airportRow.id : null;
+
+  // Status ID
+  const statusRow = db.prepare(`SELECT id FROM statuses WHERE jelkod = ?`).get(statusCode);
+  if (!statusRow) {
+    console.warn(`Status not found: ${statusCode}, sor: ${id}`);
+    return;
+  }
+  const statusId = statusRow.id;
+
+  // Event timestamp (dátum + kezdő idő)
+  const eventTimestamp = `${date} ${startTime}`;
+
+  // Created timestamp
+  const created = new Date().toLocaleString('sv-SE',
+    { timeZone: 'Europe/Budapest', hour12: false });
+
+  // Event ID
+  const eventId = `${aircraftName}_${eventTimestamp}`;
+
+  // Beszúrás
+  db.prepare(`
+    INSERT INTO schedules (event_id, aircraft_id, airport_id, status_id, event_timestamp, note, created)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(eventId, aircraftId, airportId, statusId, eventTimestamp, null, created);
+});
+*/
