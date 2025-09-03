@@ -271,7 +271,7 @@ ipcMain.handle('add-aircraft', (event, name, type, consumption) => {
 });
 
 
-ipcMain.handle('add-schedule', (event, aircraftName, airportCode, eventCode, start, end, note) => {
+function findDatabaseInfos(aircraftName, airportCode, eventCode) {
   // 1. Aircraft ID
   const aircraftRow = db.prepare(`SELECT id FROM aircrafts WHERE name = ?`).get(aircraftName);
   if (!aircraftRow) throw new Error(`Aircraft not found: ${aircraftName}`);
@@ -287,11 +287,19 @@ ipcMain.handle('add-schedule', (event, aircraftName, airportCode, eventCode, sta
   if (!statusRow) throw new Error(`Status not found: ${eventCode}`);
   const statusId = statusRow.id;
 
+  return { aircraftId, airportId, statusId };
+}
+
+
+ipcMain.handle('add-schedule', (event, aircraftName, airportCode, eventCode, start, end, note) => {
+  
+  // 1. Aircraft ID, Airport ID, Status ID
+  const { aircraftId, airportId, statusId } = findDatabaseInfos(aircraftName, airportCode, eventCode);
     
   // Event timestamp: YYYY.MM.DD H:mm:ss (helyi idő szerint)
   const createdTimestamp = new Date().toLocaleString('sv-SE', 
     { timeZone: 'Europe/Budapest', hour12: false });
-    
+
   const pad = (n) => n.toString().padStart(2, '0');
   
   const stmt = db.prepare(`
@@ -337,80 +345,23 @@ ipcMain.handle('add-schedule', (event, aircraftName, airportCode, eventCode, sta
 });
 
 
+ipcMain.handle('update-schedule', (event, eventId, updateData) => {
+  const {aircraft, airport, status, event_timestamp, note} = updateData;  
+  // 1. Aircraft ID, Airport ID, Status ID
+  const { aircraftId, airportId, statusId } = findDatabaseInfos(aircraft, airport, status);
 
-/*
-ipcMain.handle('add-schedule', (event, aircraftName, airportCode, eventCode, start, end, note) => {
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  let current = new Date(startDate);
-  const createdTimestamp = new Date().toLocaleString('sv-SE', 
+  const updatedCreated = new Date().toLocaleString('sv-SE',
     { timeZone: 'Europe/Budapest', hour12: false });
-  console.log(createdTimestamp); // pl. 2025-09-01 14:34:56
-
-
-  // Lekérdezzük az azonosítókat
-  const aircraftRow = db.prepare(`SELECT id FROM aircrafts WHERE name = ?`).get(aircraftName);
-  if (!aircraftRow) throw new Error(`Aircraft not found: ${aircraftName}`);
-  const aircraftId = aircraftRow.id;
   
-  let airportId = null;
-  const airportRow = db.prepare(`SELECT id FROM airports WHERE repter_id = ?`).get(airportCode);
-  if (!airportRow) throw new Error(`Airport not found: ${airportCode}`);
-  airportId = airportRow.id;
-
-  const statusRow = db.prepare(`SELECT id FROM statuses WHERE jelkod = ?`).get(eventCode);
-  if (!statusRow) throw new Error(`Status not found: ${eventCode}`);
-  const statusId = statusRow.id;
-
+  // 4. Update
   const stmt = db.prepare(`
-    INSERT INTO schedules (
-      event_id, aircraft_id, airport_id, status_id, event_timestamp, created, note
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    UPDATE schedules
+    SET aircraft_id = ?, airport_id = ?, status_id = ?, event_timestamp = ?, note = ?, created = ?
+    WHERE event_id = ?
   `);
-
-  const conflicts = [];
-
-  while (current < endDate) {
-    //const eventTimestamp = current.slice(0,19).replace('T',' ');
-    const eventTimestamp = current.toLocaleString('sv-SE', {
-      timeZone: 'Europe/Budapest', hour12: false, year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  }).replace(/\s/g, " "); // fix: minden szóköz normális
-
-
-    // Konflikt ellenőrzés: van-e már rekord ugyanazzal az event_timestamp-tel
-    const existing = db.prepare(`
-      SELECT s.event_id, s.event_timestamp, st.jelkod
-      FROM schedules s
-      LEFT JOIN statuses st ON s.status_id = st.id
-      WHERE s.aircraft_id = ? AND s.event_timestamp = ?
-    `).all(aircraftId, eventTimestamp);
-
-    if (existing.length > 0) {
-      //ütköző rekordokat adod vissza
-      conflicts.push(...existing);
-    } else {          
-      const dateParts = date.split(".").map(d => d.padStart(2, '0')); // ["2025","01","01"]
-      const timeParts = startTime.split(":").map(t => t.padStart(2, '0')); // ["1","00","00"] → ["01","00","00"]
-      const eventId = `${aircraftName}_${dateParts.join("")}_${timeParts.join("")}`; // "HA-ENI_20250101_010000"
-      stmt.run(eventId, aircraftId, airportId || null, statusId, eventTimestamp, createdTimestamp, note || null);
-    }
-
-    // Következő 1 órás blokk
-    current.setHours(current.getHours() + 1);
-  }
-
-  if (conflicts.length > 0) {
-    return { success: false, conflicts };
-  }
-  return { success: true };
+  const info = stmt.run(aircraftId, airportId, statusId, event_timestamp, note || null, updatedCreated, eventId);
+  return { success: info.changes > 0}; // módosított sorok száma (0 vagy 1)
 });
-*/
 
 
 ipcMain.handle('add-status', (event, code, description, color) => {

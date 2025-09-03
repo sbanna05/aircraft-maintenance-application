@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import './App.css'; // Assuming you have some styles for the Input component
-
+import "./App.css"; // Assuming you have some styles for the Input component
 
 function Input() {
   const [aircrafts, setAircrafts] = useState([]);
@@ -16,22 +15,21 @@ function Input() {
     note: "",
   });
 
-   useEffect(() => {
-  async function fetchAll() {
-    const [schedules, aircrafts, airports, events] = await Promise.all([
-      window.api.getSchedules(),
-      window.api.getAircrafts(),
-      window.api.getAirports(),
-      window.api.getStatuses(),
-    ]);
-    setSchedules(schedules);
-    setAircrafts(aircrafts);
-    setAirports(airports);
-    setEvents(events);
-  }
-  fetchAll();
-}, []);
-
+  useEffect(() => {
+    async function fetchAll() {
+      const [schedules, aircrafts, airports, events] = await Promise.all([
+        window.api.getSchedules(),
+        window.api.getAircrafts(),
+        window.api.getAirports(),
+        window.api.getStatuses(),
+      ]);
+      setSchedules(schedules);
+      setAircrafts(aircrafts);
+      setAirports(airports);
+      setEvents(events);
+    }
+    fetchAll();
+  }, []);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -53,20 +51,55 @@ function Input() {
     }
 
     const result = await window.api.addSchedule(
-    formData.aircraft,
-    formData.airport,
-    formData.event,
-    formData.start,
-    formData.end,
-    formData.note
-  );
+      formData.aircraft,
+      formData.airport,
+      formData.event,
+      formData.start,
+      formData.end,
+      formData.note
+    );
 
-    if (!result.success) {
-    alert("Átfedés történt az alábbi időpontokkal:\n" + 
-      result.conflicts.map(c => `${c.event_id} ${c.jelkod}`).join('\n'));
-    return;
-  }
+    if (!result.success && result.conflicts.length > 0) {
+      const conflictList = result.conflicts
+        .map((c) => `${c.event_id} (${c.jelkod})`)
+        .join("\n");
 
+      const overwrite = confirm(
+        `Az alábbi időpontokra már van esemény:\n${conflictList}\nFelül szeretné írni ezeket?`
+      );
+
+      if (overwrite) {
+        const pad = (n) => n.toString().padStart(2, "0");
+    
+        // Frissítjük az ütköző rekordokat
+        for (const c of result.conflicts) {
+          //a conflict sorszámát hozzáadjuk a start időhöz
+          const idx = result.conflicts.indexOf(c);
+          const startDate = new Date(formData.start);
+          startDate.setHours(startDate.getHours() + idx);
+          
+          const event_timestamp =
+            `${startDate.getFullYear()}.` +
+            `${pad(startDate.getMonth() + 1)}.` +
+            `${pad(startDate.getDate())} ` +
+            `${startDate.getHours()}:${pad(startDate.getMinutes())}:${pad(
+              startDate.getSeconds()
+            )}`;
+
+
+          await window.api.updateSchedule(c.event_id, {
+            aircraft: formData.aircraft,
+            airport: formData.airport,
+            status: formData.event,
+            event_timestamp,
+            note: formData.note,
+          });
+        }
+        alert("Események frissítve.");
+      } else {
+        return; // Felhasználó nem akar felülírni
+      }
+    }
     // újra lekérjük az adatokat
     const updated = await window.api.getSchedules();
     setSchedules(updated);
@@ -82,37 +115,21 @@ function Input() {
     });
   }
 
-  // Dátum formázó függvény: "YYYY.MM.DD H:MM:SS"
-function formatCustomDate(dateString) {
-  if (!dateString) return "";
+  function formatHungarianDate(isoString) {
+    const date = new Date(isoString);
+    return date
+      .toLocaleString("hu-HU", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      })
+      .replace(/\s+/g, " ");
+  }
 
-  const date = new Date(dateString.replace(" ", "T"));
-  if (isNaN(date)) return dateString; // ha rossz formátum, hagyjuk
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hour = date.getHours(); // nincs padStart → 9, nem 09
-  const minute = String(date.getMinutes()).padStart(2, "0");
-  const second = String(date.getSeconds()).padStart(2, "0");
-
-  return `${year}.${month}.${day} ${hour}:${minute}:${second}`;
-}
-
-function formatHungarianDate(isoString) {
-  const date = new Date(isoString);
-  return date.toLocaleString("hu-HU", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  }).replace(/\s+/g, " ");
-}
-
-  
   // lapozáshoz state-ek
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -186,8 +203,8 @@ function formatHungarianDate(isoString) {
             </td>
             <td>
               <input
-              id="start"
-              type="datetime-local"
+                id="start"
+                type="datetime-local"
                 name="start"
                 value={formData.start}
                 onChange={handleChange}
@@ -195,16 +212,16 @@ function formatHungarianDate(isoString) {
             </td>
             <td>
               <input
-              id="end"
+                id="end"
                 type="datetime-local"
                 name="end"
                 value={formData.end}
                 onChange={handleChange}
               />
             </td>
-             <td>
+            <td>
               <input
-              id="note"
+                id="note"
                 type="text"
                 name="note"
                 value={formData.note || ""}
@@ -212,7 +229,9 @@ function formatHungarianDate(isoString) {
               />
             </td>
             <td>
-              <button className="btn btn-primary" onClick={handleSave}>Mentés</button>
+              <button className="btn btn-primary" onClick={handleSave}>
+                Mentés
+              </button>
             </td>
           </tr>
         </tbody>
@@ -271,58 +290,85 @@ function formatHungarianDate(isoString) {
             </tr>
           ))}
         </tbody>
-</table>
-
+      </table>
 
       {/* Lapozás */}
       {/* --- Lapozó --- */}
-<nav>
-  <ul className="pagination">
-    <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-      <button className="page-link" onClick={() => setCurrentPage(currentPage - 1)}>
-        Előző
-      </button>
-    </li>
+      <nav>
+        <ul className="pagination">
+          <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+            <button
+              className="page-link"
+              onClick={() => setCurrentPage(currentPage - 1)}
+            >
+              Előző
+            </button>
+          </li>
 
-    {/* Első oldal */}
-    {currentPage > 3 && (
-      <>
-        <li className="page-item">
-          <button className="page-link" onClick={() => setCurrentPage(1)}>1</button>
-        </li>
-        <li className="page-item disabled"><span className="page-link">...</span></li>
-      </>
-    )}
+          {/* Első oldal */}
+          {currentPage > 3 && (
+            <>
+              <li className="page-item">
+                <button className="page-link" onClick={() => setCurrentPage(1)}>
+                  1
+                </button>
+              </li>
+              <li className="page-item disabled">
+                <span className="page-link">...</span>
+              </li>
+            </>
+          )}
 
-    {/* Aktuális oldal körül ±2 oldal */}
-    {Array.from({ length: totalPages }, (_, i) => i + 1)
-      .filter(page => page >= currentPage - 2 && page <= currentPage + 2)
-      .map(page => (
-        <li key={page} className={`page-item ${currentPage === page ? "active" : ""}`}>
-          <button className="page-link" onClick={() => setCurrentPage(page)}>
-            {page}
-          </button>
-        </li>
-      ))}
+          {/* Aktuális oldal körül ±2 oldal */}
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(
+              (page) => page >= currentPage - 2 && page <= currentPage + 2
+            )
+            .map((page) => (
+              <li
+                key={page}
+                className={`page-item ${currentPage === page ? "active" : ""}`}
+              >
+                <button
+                  className="page-link"
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </button>
+              </li>
+            ))}
 
-    {/* Utolsó oldal */}
-    {currentPage < totalPages - 2 && (
-      <>
-        <li className="page-item disabled"><span className="page-link">...</span></li>
-        <li className="page-item">
-          <button className="page-link" onClick={() => setCurrentPage(totalPages)}>{totalPages}</button>
-        </li>
-      </>
-    )}
+          {/* Utolsó oldal */}
+          {currentPage < totalPages - 2 && (
+            <>
+              <li className="page-item disabled">
+                <span className="page-link">...</span>
+              </li>
+              <li className="page-item">
+                <button
+                  className="page-link"
+                  onClick={() => setCurrentPage(totalPages)}
+                >
+                  {totalPages}
+                </button>
+              </li>
+            </>
+          )}
 
-    <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
-      <button className="page-link" onClick={() => setCurrentPage(currentPage + 1)}>
-        Következő
-      </button>
-    </li>
-  </ul>
-</nav>
-
+          <li
+            className={`page-item ${
+              currentPage === totalPages ? "disabled" : ""
+            }`}
+          >
+            <button
+              className="page-link"
+              onClick={() => setCurrentPage(currentPage + 1)}
+            >
+              Következő
+            </button>
+          </li>
+        </ul>
+      </nav>
     </>
   );
 }

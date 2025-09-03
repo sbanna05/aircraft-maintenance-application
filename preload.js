@@ -11,7 +11,9 @@ contextBridge.exposeInMainWorld('api', {
   addSchedule: (aircraft, airport, event, start, end, note) => ipcRenderer.invoke('add-schedule', aircraft, airport, event, start, end, note),
   addStatus: (code, description, color) => ipcRenderer.invoke('add-status', code, description, color),
   addUser: (username, password, role) => ipcRenderer.invoke('add-user', username, password, role),
-  
+
+  updateSchedule: (id, updateData) => ipcRenderer.invoke('update-schedule', id, updateData),
+
   deleteAircraft: (id) => ipcRenderer.invoke('delete-aircraft', id),
   deleteSchedule: (id) => ipcRenderer.invoke('delete-schedule', id),
   deleteStatus: (id) => ipcRenderer.invoke('delete-status', id),
