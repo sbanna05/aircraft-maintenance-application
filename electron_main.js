@@ -271,7 +271,74 @@ ipcMain.handle('add-aircraft', (event, name, type, consumption) => {
 });
 
 
+ipcMain.handle('add-schedule', (event, aircraftName, airportCode, eventCode, start, end, note) => {
+  // 1. Aircraft ID
+  const aircraftRow = db.prepare(`SELECT id FROM aircrafts WHERE name = ?`).get(aircraftName);
+  if (!aircraftRow) throw new Error(`Aircraft not found: ${aircraftName}`);
+  const aircraftId = aircraftRow.id;
 
+  // 2. Airport ID
+  let airportId = null;
+  const airportRow = db.prepare(`SELECT id FROM airports WHERE repter_id = ?`).get(airportCode);
+  airportId = airportRow ? airportRow.id : null;
+
+  // 3. Status ID
+  const statusRow = db.prepare(`SELECT id FROM statuses WHERE jelkod = ?`).get(eventCode);
+  if (!statusRow) throw new Error(`Status not found: ${eventCode}`);
+  const statusId = statusRow.id;
+
+    
+  // Event timestamp: YYYY.MM.DD H:mm:ss (helyi idő szerint)
+  const createdTimestamp = new Date().toLocaleString('sv-SE', 
+    { timeZone: 'Europe/Budapest', hour12: false });
+    
+  const pad = (n) => n.toString().padStart(2, '0');
+  
+  const stmt = db.prepare(`
+    INSERT INTO schedules (
+      event_id, aircraft_id, airport_id, status_id, event_timestamp, created, note
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  // 4. Start / End datetime
+  let current = new Date(start);  // start a datetime-local string pl. "2025-09-03T09:39"
+  const endDate = new Date(end);
+  const conflicts = [];
+
+  while (current < endDate) {
+
+  const eventTimestamp = `${current.getFullYear()}.${pad(current.getMonth()+1)}.${pad(current.getDate())} ${current.getHours()}:${pad(current.getMinutes())}:${pad(current.getSeconds())}`;
+
+    // Event ID: AIRCRAFTNAME_YYYYMMDD_HHMMSS
+    const eventId = `${aircraftName}_${current.getFullYear()}${pad(current.getMonth()+1)}${pad(current.getDate())}_${pad(current.getHours())}${pad(current.getMinutes())}${pad(current.getSeconds())}`;
+ // Konflikt ellenőrzés: van-e már rekord ugyanazzal az event_timestamp-tel
+    const existing = db.prepare(`
+      SELECT s.event_id, s.event_timestamp, st.jelkod
+      FROM schedules s
+      LEFT JOIN statuses st ON s.status_id = st.id
+      WHERE s.aircraft_id = ? AND s.event_timestamp = ?
+    `).all(aircraftId, eventTimestamp);
+
+    if (existing.length > 0) {
+      //ütköző rekordokat adod vissza
+      conflicts.push(...existing);
+    } else {
+      stmt.run(eventId, aircraftId, airportId || null, statusId, eventTimestamp, createdTimestamp, note || null);
+    }
+
+    // Következő 1 órás blokk
+    current.setHours(current.getHours() + 1);
+  }
+
+  if (conflicts.length > 0) {
+    return { success: false, conflicts };
+  }
+  return { success: true };
+});
+
+
+
+/*
 ipcMain.handle('add-schedule', (event, aircraftName, airportCode, eventCode, start, end, note) => {
   const startDate = new Date(start);
   const endDate = new Date(end);
@@ -285,10 +352,11 @@ ipcMain.handle('add-schedule', (event, aircraftName, airportCode, eventCode, sta
   const aircraftRow = db.prepare(`SELECT id FROM aircrafts WHERE name = ?`).get(aircraftName);
   if (!aircraftRow) throw new Error(`Aircraft not found: ${aircraftName}`);
   const aircraftId = aircraftRow.id;
-
+  
+  let airportId = null;
   const airportRow = db.prepare(`SELECT id FROM airports WHERE repter_id = ?`).get(airportCode);
   if (!airportRow) throw new Error(`Airport not found: ${airportCode}`);
-  const airportId = airportRow.id;
+  airportId = airportRow.id;
 
   const statusRow = db.prepare(`SELECT id FROM statuses WHERE jelkod = ?`).get(eventCode);
   if (!statusRow) throw new Error(`Status not found: ${eventCode}`);
@@ -304,9 +372,15 @@ ipcMain.handle('add-schedule', (event, aircraftName, airportCode, eventCode, sta
 
   while (current < endDate) {
     //const eventTimestamp = current.slice(0,19).replace('T',' ');
-    const eventTimestamp = current.toLocaleString('sv-SE', { 
-      timeZone: 'Europe/Budapest', hour12: false 
-    }).replace(' ', ' ');
+    const eventTimestamp = current.toLocaleString('sv-SE', {
+      timeZone: 'Europe/Budapest', hour12: false, year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).replace(/\s/g, " "); // fix: minden szóköz normális
 
 
     // Konflikt ellenőrzés: van-e már rekord ugyanazzal az event_timestamp-tel
@@ -320,9 +394,11 @@ ipcMain.handle('add-schedule', (event, aircraftName, airportCode, eventCode, sta
     if (existing.length > 0) {
       //ütköző rekordokat adod vissza
       conflicts.push(...existing);
-    } else {
-      const eventId = `${aircraftName}_${eventTimestamp}`;
-      stmt.run(eventId, aircraftId, airportId, statusId, eventTimestamp, createdTimestamp, note || null);
+    } else {          
+      const dateParts = date.split(".").map(d => d.padStart(2, '0')); // ["2025","01","01"]
+      const timeParts = startTime.split(":").map(t => t.padStart(2, '0')); // ["1","00","00"] → ["01","00","00"]
+      const eventId = `${aircraftName}_${dateParts.join("")}_${timeParts.join("")}`; // "HA-ENI_20250101_010000"
+      stmt.run(eventId, aircraftId, airportId || null, statusId, eventTimestamp, createdTimestamp, note || null);
     }
 
     // Következő 1 órás blokk
@@ -334,7 +410,7 @@ ipcMain.handle('add-schedule', (event, aircraftName, airportCode, eventCode, sta
   }
   return { success: true };
 });
-
+*/
 
 
 ipcMain.handle('add-status', (event, code, description, color) => {
@@ -350,7 +426,7 @@ ipcMain.handle('add-user', (event, username, password, role) => {
 
 /*============ TÖRLÉSEK ========================= */
 ipcMain.handle('delete-schedule', (event, id) => {
-  const stmt = db.prepare('DELETE FROM data_table WHERE esemeny_id = ?');
+  const stmt = db.prepare('DELETE FROM schedules WHERE event_id = ?');
   return stmt.run(id);
 });
 
@@ -411,7 +487,12 @@ lines.forEach((line) => {
     { timeZone: 'Europe/Budapest', hour12: false });
 
   // Event ID
-  const eventId = `${aircraftName}_${eventTimestamp}`;
+  //const eventId = `${aircraftName}_${eventTimestamp}`;
+  // Event ID formázása: YYYYMMDD_HHMMSS
+  const dateParts = date.split(".").map(d => d.padStart(2, '0')); // ["2025","01","01"]
+  const timeParts = startTime.split(":").map(t => t.padStart(2, '0')); // ["1","00","00"] → ["01","00","00"]
+  const eventId = `${aircraftName}_${dateParts.join("")}_${timeParts.join("")}`; // "HA-ENI_20250101_010000"
+
 
   // Beszúrás
   db.prepare(`

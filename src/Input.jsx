@@ -82,6 +82,36 @@ function Input() {
     });
   }
 
+  // Dátum formázó függvény: "YYYY.MM.DD H:MM:SS"
+function formatCustomDate(dateString) {
+  if (!dateString) return "";
+
+  const date = new Date(dateString.replace(" ", "T"));
+  if (isNaN(date)) return dateString; // ha rossz formátum, hagyjuk
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hour = date.getHours(); // nincs padStart → 9, nem 09
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  const second = String(date.getSeconds()).padStart(2, "0");
+
+  return `${year}.${month}.${day} ${hour}:${minute}:${second}`;
+}
+
+function formatHungarianDate(isoString) {
+  const date = new Date(isoString);
+  return date.toLocaleString("hu-HU", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).replace(/\s+/g, " ");
+}
+
   
   // lapozáshoz state-ek
   const [currentPage, setCurrentPage] = useState(1);
@@ -224,7 +254,7 @@ function Input() {
             <tr key={index}>
               <td>{schedule.aircraft}</td>
               <td>{schedule.airport}</td>
-              <td>{schedule.event_timestamp}</td>
+              <td>{formatHungarianDate(schedule.event_timestamp)}</td>
               <td>{schedule.status}</td>
               <td>{schedule.note}</td>
               <td>

@@ -33,22 +33,14 @@ function Statistics({ selectedAircraft }) {
   }, []);
 
   // Biztosabb hónap-kinyerés: kezeli az "YYYY-MM-DD", "YYYY.MM.DD" és "YYYY.MM.DD." formátumokat is
-  function getMonthIndexFromDatum(datum) {
-    if (!datum) return null;
-
-    // 2) fallback: split ponttal/perjellel/kötőjellel; levágjuk a záró pontot
-    const parts = String(datum)
-      .trim()
-      .replace(/\.$/, "")
-      .split(/[.\/-]/); // . / -
-
-    // Elvárt: [YYYY, MM, DD]
-    if (parts.length >= 2) {
-      const m = parseInt(parts[1], 10);
-      if (!Number.isNaN(m)) return m - 1; // 0-11
-    }
-    return null; // ismeretlen formátum
-  }
+ function getMonthIndexFromDatum(datum) {
+  if (!datum) return null;
+  // Több szóköz kezelése, formátumok: YYYY.MM.DD, YYYY.MM.DD., YYYY-MM-DD
+  const match = datum.match(/(\d{4})[.\-]\s*(\d{1,2})[.\-]\s*(\d{1,2})/);
+  if (!match) return null;
+  const month = parseInt(match[2], 10);
+  return month - 1; // 0–11
+}
 
   function getMonthlyStatusStats(monthIdx) {
     // Számolás: egy passzban, csak az "m" nélküli státuszokat
