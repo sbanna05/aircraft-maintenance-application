@@ -50,46 +50,36 @@ function Statistics({ selectedAircraft }) {
     return null; // ismeretlen formátum
   }
 
-  // Havi statisztikák státuszokra bontva
   function getMonthlyStatusStats(monthIdx) {
-    const monthlySchedules = schedules.filter((sch) => {
+    // Számolás: egy passzban, csak az "m" nélküli státuszokat
+    const statusCounts = {};
+    let total = 0;
+
+    schedules.forEach((sch) => {
       const schMonth = getMonthIndexFromDatum(sch?.datum);
-      if (schMonth === null) return false;
+      const gep_azonosito = sch.aircraft ?? null;
+      const aircraftMatch = selectedAircraft?.length 
+              ? selectedAircraft.includes(gep_azonosito) : true;
 
-        const aircraftMatch = selectedAircraft?.length
-        ? selectedAircraft.includes(sch.gep_azonosito)
-        : true;
-
-      return schMonth === monthIdx && aircraftMatch;
-    });
-
-    const total = monthlySchedules.length;
-
-    // Elő-alloc ismert státuszkódokra
-    const statusCounts = new Map(statuses.map((s) => [s.jelkod, 0]));
-
-    // Számolás
-    for (const sch of monthlySchedules) {
-      const code = sch?.tevekenyseg_kod; // Ütemezésben lévő státuszkód (pl. "OK", "CNX" stb.)
-      if (statusCounts.has(code)) {
-        statusCounts.set(code, statusCounts.get(code) + 1);
+      if (schMonth === monthIdx && aircraftMatch && sch.status !== "m") {
+        statusCounts[sch.status] = (statusCounts[sch.status] || 0) + 1;
+        total += 1;
       }
-    }
+  });
 
-    // Eredmény tömb (rendezve darab szerint)
-    const rows = statuses.map((s) => {
-      const count = statusCounts.get(s.jelkod) || 0;
-      const percent = total ? ((count / total) * 100).toFixed(1) : 0;
-
-      return {
-        jelkod: s.jelkod,
-        megnevezes: s.jelentes ?? "",
-        count,
-        percent,
+    // Eredmény tömb: minden státusz, ami nem "m", még ha 0 is
+    const rows = statuses
+      .filter((s) => s.jelkod !== "m")
+      .map((s) => {
+        const count = statusCounts[s.jelkod] || 0;
+        const percent = total ? ((count / total) * 100).toFixed(1) : 0;
+        return {
+          jelkod: s.jelkod,
+          megnevezes: s.jelentes ?? "",
+          count,
+          percent,
       };
     });
-
-    //rows.sort((a, b) => b.count - a.count);
 
     return { rows, total };
   }
@@ -135,7 +125,7 @@ function Statistics({ selectedAircraft }) {
             <tbody>
               {rows.map((row) => (
                 <tr key={row.jelkod}>
-                  <td className={row.jelkod}>{row.megnevezes}</td>
+                  <td>{row.megnevezes}</td>
                   <td>{row.count}</td>
                   <td>{row.percent}%</td>
                 </tr>

@@ -78,7 +78,6 @@ function getStatusMeaning(code) {
     });
       row[day] = match ? match.status : '';
     });
-    console.log(row);
     return row;
   });
 
@@ -101,6 +100,8 @@ function getStatusMeaning(code) {
           </button>
         ))}
       </div>
+
+      <Statistics selectedAircraft={selectedAircraft}/>
 
       <div className="mb-4">
         <label className="form-label">
