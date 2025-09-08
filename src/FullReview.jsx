@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Statistics from './Statistics';
 
 function FullReview() {
@@ -56,30 +56,35 @@ function getStatusMeaning(code) {
   return status ? status.jelentes : 'Ismeretlen';
 }
 
-  // ---- Naptár mátrix előkészítése ----
-  const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
-  const days = [...new Set(usageData.map(r => r.datum))]
-    .sort((a, b) => new Date(a) - new Date(b));
+const usageMap = useMemo(() => {
+    const map = {}; // map[datum][hour] = status
+    usageData.forEach(r => {  
+      if (!r.event_timestamp) return;
+      const [datum, time] = r.event_timestamp.split(' '); // "2025.05.12", "14:00:00"
+      const startHour = parseInt(time.split(':')[0], 10); // 14
+      const endHour = (startHour === 23) ? 24 : startHour + 1;
 
- const calendarMatrix = hours.map(hour => {
-    const row = { hour };
-    const hourInt = parseInt(hour.split(':')[0], 10);
-
-    days.forEach(day => {
-      const match = usageData.find(r => {
-        if (!r.event_timestamp) return false;
-
-        const datum = r.event_timestamp.split(' ')[0]; // "2025.05.12"
-        const time = r.event_timestamp.split(' ')[1]; // "14:00:00"
-        const startHour = parseInt(time.split(':')[0], 10); // 14
-        const endHour = (startHour === 23) ? 24 : startHour + 1;
-
-        return datum === day && hourInt >= startHour && hourInt < endHour;
+      if (!map[datum]) map[datum] = {}; // napokhoz objektum
+      for (let h = startHour; h < endHour; h++) {
+        map[datum][h] = r.status; // órákhoz státusz
+      }
     });
-      row[day] = match ? match.status : '';
+    return map; // { "2025.05.12": { 14: "r", 15: "k" }, ... }
+  }, [usageData]);
+
+// ---- Naptár mátrix előkészítése ----
+const hours = Array.from({ length: 24 }, (_, i) => i); // 0-23
+const days = Object.keys(usageMap).sort((a,b) => new Date(a) - new Date(b));
+
+const calendarMatrix = useMemo(() => {
+  return hours.map(hour => {
+    const row = { hour: `${hour}:00` };
+    days.forEach(day => {
+      row[day] = usageMap[day]?.[hour] || '';
     });
     return row;
   });
+}, [usageMap]);
 
 
  return (
