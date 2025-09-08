@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('api', {
   getStatuses: () => ipcRenderer.invoke('get-statuses'),
   getAirports: () => ipcRenderer.invoke('get-airports'),
   getUsers: () => ipcRenderer.invoke('get-users'),
+  getStatsByMonth: (gepAzonosito) => ipcRenderer.invoke('get-stats-by-month', gepAzonosito),
   
   addAircraft: (name, type, consumption) => ipcRenderer.invoke('add-aircraft', name, type, consumption),
   addSchedule: (aircraft, airport, event, start, end, note) => ipcRenderer.invoke('add-schedule', aircraft, airport, event, start, end, note),

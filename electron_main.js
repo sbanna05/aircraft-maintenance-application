@@ -120,72 +120,6 @@ db.prepare(`
     ('r', 'repült', '#66b65b')
   `).run();
 
-
-// --- Adatbázis előkészítése ---
-function seedFromCSV() {
-  const filePath = path.join(__dirname, 'proba_adatok.csv');
-  const workbook = xlsx.readFile(filePath, { type: 'file', cellDates: true });
-  const sheetName = workbook.SheetNames[0];
-  const rows = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { raw: true, defval: null });
-
-
-  const insertData = db.prepare(`
-    INSERT INTO data_table
-      (gep_azonosito, datum, kezdes_idopont, vege_idopont, idotartam_perc, tevekenyseg_kod, megjegyzes)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  const pad = (n) => String(n).padStart(2, '0');
-
-  db.transaction(() => {
-    for (const row of rows) {
-      const gepAzonosito = row["gep_azonosito"];
-      const datum = formatHungarianDate(row["datum"]);
-      const kezdes = formatHungarianTime(row["kezdes_idopont"]);
-      const vege = formatHungarianTime(row["vege_idopont"]);
-      const idotartam = parseFloat(String(row["idotartam_perc"] || "0").replace(",", "."));
-      const tevekenyseg = row["tevekenyseg_kod"];
-      const megjegyzes = row["megjegyzes"] || null;
-
-      insertData.run(gepAzonosito, datum, kezdes, vege, idotartam, tevekenyseg, megjegyzes);
-    }
-  })();
-
-  console.log("CSV-ből feltöltés kész!");
-}
-
-
-function formatHungarianDate(val) {
-  if (typeof val === 'number') {
-    const date = xlsx.SSF.parse_date_code(val);
-    if (!date) return val;
-    return `${date.y}.${pad(date.m)}.${pad(date.d)}`;
-  }
-  const d = new Date(val);
-  if (!isNaN(d)) {
-    return `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())}`;
-  }
-  return val;
-}
-
-function formatHungarianTime(val) {
-  if (typeof val === 'number') {
-    const date = xlsx.SSF.parse_date_code(val);
-    return `${pad(date.H)}:${pad(date.M)}:${pad(Math.floor(date.S))}`;
-  }
-  const d = new Date(`1970-01-01T${val}`);
-  if (!isNaN(d)) {
-    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-  }
-  return val;
-}
-
-function pad(n) {
-  return String(n).padStart(2, '0');
-}
-
-
-seedFromCSV();
 */
 
 app.whenReady().then(() => {
@@ -261,6 +195,24 @@ ipcMain.handle('get-statuses', () => {
 ipcMain.handle('get-users', () => {
   const stmt = db.prepare('SELECT * FROM users ORDER BY id');
   return stmt.all();
+});
+
+// Statisztika: adott gép havi bontásban státuszok szerint
+ipcMain.handle('get-stats-by-month', (event, gepAzonosito) => {
+  const query = `
+    SELECT 
+      CAST(substr(s.event_timestamp, 6, 2) AS INTEGER) - 1 AS monthIdx,
+      st.jelkod,
+      COUNT(*) as count
+    FROM schedules s
+    LEFT JOIN statuses st ON s.status_id = st.id
+    left join aircrafts a on a.id = s.aircraft_id
+    WHERE a.name = ?
+      AND st.jelkod <> 'm'
+    GROUP BY monthIdx, st.jelkod
+    ORDER BY monthIdx;
+  `;
+  return db.prepare(query).all(gepAzonosito);
 });
 
 
