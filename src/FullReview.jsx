@@ -69,6 +69,18 @@ const usageMap = useMemo(() => {
         map[datum][h] = r.status; // órákhoz státusz
       }
     });
+
+    // Nyitvatartási órák jelzése "m"-ként
+  const defaultOpening = { hetvege: { open: 9, close: 14 }, hetkoznap: { open: 6, close: 16 } };
+  Object.keys(map).forEach(datum => {
+    const day = new Date(datum).getDay();
+    const rule = (day === 0 || day === 6) ? defaultOpening.hetvege : defaultOpening.hetkoznap;
+    for (let h = 0; h < 24; h++) {
+      if (h <= rule.open || h >= rule.close) {
+        if (!map[datum][h]) map[datum][h] = '-';
+      }
+    }
+  });
     return map; // { "2025.05.12": { 14: "r", 15: "k" }, ... }
   }, [usageData]);
 

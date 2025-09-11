@@ -365,6 +365,7 @@ lines.forEach((line) => {
   const [id, aircraftName, date, startTime, endTime, duration, statusCode] =
     line.split(";").map((s) => s.trim());
 
+  if (statusCode === 'm') return; // kihagyjuk az 'm' státuszt
   // Lekérjük az azonosítókat
   const aircraftRow = db.prepare(`SELECT id FROM aircrafts WHERE name = ?`).get(aircraftName);
   if (!aircraftRow) {
