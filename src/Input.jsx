@@ -8,7 +8,7 @@ function Input() {
   const [events, setEvents] = useState([]);
   const [formData, setFormData] = useState({
     aircraft: "",
-    airport: "",
+    airport: "LHDC",
     event: "",
     start: "",
     end: "",
@@ -42,6 +42,7 @@ function Input() {
   async function handleSave() {
     if (
       !formData.aircraft ||
+      !formData.airport ||
       !formData.event ||
       !formData.start ||
       !formData.end
@@ -107,7 +108,7 @@ function Input() {
     // ürítjük a formot
     setFormData({
       aircraft: "",
-      airport: "",
+      airport: "LHDC",
       event: "",
       start: "",
       end: "",
@@ -178,7 +179,7 @@ function Input() {
                 value={formData.airport}
                 onChange={handleChange}
               >
-                <option value="">Válassz repteret</option>
+                
                 {airports.map((airport) => (
                   <option key={airport.repter_id} value={airport.repter_id}>
                     {airport.repter_id}

@@ -203,10 +203,13 @@ ipcMain.handle('get-stats-by-month', (event, gepAzonosito) => {
     SELECT 
       CAST(substr(s.event_timestamp, 6, 2) AS INTEGER) - 1 AS monthIdx,
       st.jelkod,
-      COUNT(*) as count
+      COUNT(*) as count,
+      ap.repter_id AS airport,
+      ap.nyitvatartas AS nyitvatartas
     FROM schedules s
     LEFT JOIN statuses st ON s.status_id = st.id
     left join aircrafts a on a.id = s.aircraft_id
+    left join airports ap on ap.id = s.airport_id
     WHERE a.name = ?
       AND st.jelkod <> 'm'
     GROUP BY monthIdx, st.jelkod

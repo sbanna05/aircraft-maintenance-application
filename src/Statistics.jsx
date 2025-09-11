@@ -54,52 +54,58 @@ useEffect(() => {
     let total = 0;
     const statusCounts = {};
     const airportCounter = {};
-
-    monthly.forEach((s) => {
-      statusCounts[s.jelkod] = (statusCounts[s.jelkod] || 0) + 1;
-      total++;
-
-      if (s.airport) {
-        airportCounter[s.airport] = (airportCounter[s.airport] || 0) + 1;
-      }
-    });
-    // domináns reptér
-    const dominantAirport = "N/A"; // jelenleg nincs repülőtér adat
-
-    //const dominantAirport = Object.entries(airportCounter).sort((a,b) => b[1]-a[1])[0]?.[0] || "N/A";
-
+    const airportHours = {};
 
     monthly.forEach((s) => {
       statusCounts[s.jelkod] = s.count;
       total += s.count;
+
+      if (s.airport) {
+        airportCounter[s.airport] = (airportCounter[s.airport] || 0) + 1;
+      if (s.nyitvatartas) {
+        try {
+          airportHours[s.airport] = JSON.parse(s.nyitvatartas);
+        } catch (e) {
+          console.warn("Hibás nyitvatartás JSON:", s.nyitvatartas);
+        }
+      }
+      }
     });
-    
+
+    // domináns reptér
+    let dominantAirport = Object.entries(airportCounter).sort((a,b) => b[1]-a[1])[0]?.[0] || "LHDC";
+    // ha nincs reptérhez tárolt nyitvatartás → default LHDC
+    const openingRules =
+      airportHours[dominantAirport] ||
+      {
+        hetvege: { open: 9, close: 14 },
+        hetkoznap: { open: 6, close: 16 },
+      };
     // hónap napjai
     const year = new Date().getFullYear();
     const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
 
-    let totalHours = 0;
+    let totalOpenHours = 0;
     let closedHours = 0;
 
     for (let d = 1; d <= daysInMonth; d++) {
       const day = new Date(year, monthIdx, d).getDay(); // 0=vasárnap, 6=szombat
-      const openStart = day === 0 || day === 6 ? 9 : 6;
-      const openEnd   = (day === 0 || day === 6) ? 14 :16
+      
+      const rule = day === 0 || day === 6 ? openingRules.hetvege : openingRules.hetkoznap;
+      const openStart = rule.open;
+      const openEnd = rule.close;
 
       // napi nyitvatartási órák
       const openHours = openEnd - openStart;
-      totalHours += openHours;
-
-      // összes óra (24h) - nyitva = zárva
+      totalOpenHours += openHours;
       closedHours += 24 - openHours;
     }
     
-    totalHours += closedHours; // összes nyitvatartási óra a hónapban
     const notamHours = statusCounts["n"] || 0;
-    const availableHours = totalHours - closedHours - notamHours;
+    const availableHours = totalOpenHours - notamHours;
 
     const summary = {
-      totalHours,
+      totalHours: daysInMonth * 24,
       dominantAirport,
       closedHours,
       notamHours,
