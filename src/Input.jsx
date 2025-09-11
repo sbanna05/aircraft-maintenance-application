@@ -66,6 +66,26 @@ function Input() {
       return;
     }
 
+    //Nyitvatartási időn belül van-e a start és end?
+    const airport = airports.find(a => a.repter_id === formData.airport);
+    const defaultHours = { hetvege: { open: 9, close: 14 }, hetkoznap: { open: 6, close: 16 } };
+    const openingHours = airport && airport.nyitvatartas ? JSON.parse(airport.nyitvatartas) : defaultHours;
+    
+    const startDate = new Date(formData.start);
+    const endDate = new Date(formData.end);
+    const day = startDate.getDay();
+    const rule = (day === 0 || day === 6) ? openingHours.hetvege || defaultHours.hetvege
+                                 : openingHours.hetkoznap || defaultHours.hetkoznap;
+    
+    if (startDate.getHours() < rule.open || startDate.getHours() >= rule.close ||
+        endDate.getHours() <= rule.open || endDate.getHours() > rule.close) {
+      const proceed = confirm(
+        `A kiválasztott reptér nyitvatartási ideje: ${rule.open}:00 - ${rule.close}:00\n` +
+        `Kívánja attól függetlenül menteni az eseményt?`
+      );
+      if (!proceed) return; // ha Nem, megszakítjuk
+    }
+
     const result = await window.api.addSchedule(
       formData.aircraft,
       formData.airport,
@@ -91,7 +111,6 @@ function Input() {
         for (const c of result.conflicts) {
           //a conflict sorszámát hozzáadjuk a start időhöz
           const idx = result.conflicts.indexOf(c);
-          const startDate = new Date(formData.start);
           startDate.setHours(startDate.getHours() + idx);
           
           const event_timestamp =
