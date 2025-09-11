@@ -39,6 +39,21 @@ function Input() {
     }));
   }
 
+ function handleStartChange(e) {
+  const start = e.target.value;
+
+  setFormData(prev => {
+    const newData = { ...prev, start };
+    
+    if (!prev.end || start >= prev.end) {
+      const d = new Date(start);
+      d.setHours(d.getHours() + 1);
+      newData.end = d.toLocaleString('sv-SE', { hour12: false }).slice(0,16);
+    }
+    return newData;
+  });
+}
+
   async function handleSave() {
     if (
       !formData.aircraft ||
@@ -208,7 +223,7 @@ function Input() {
                 type="datetime-local"
                 name="start"
                 value={formData.start}
-                onChange={handleChange}
+                onChange={handleStartChange}
               />
             </td>
             <td>
