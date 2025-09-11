@@ -211,7 +211,7 @@ ipcMain.handle('get-stats-by-month', (event, gepAzonosito) => {
     left join aircrafts a on a.id = s.aircraft_id
     left join airports ap on ap.id = s.airport_id
     WHERE a.name = ?
-      AND st.jelkod <> 'm'
+      AND st.jelkod <> '-'
     GROUP BY monthIdx, st.jelkod
     ORDER BY monthIdx;
   `;

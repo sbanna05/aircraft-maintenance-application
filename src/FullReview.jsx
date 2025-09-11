@@ -1,21 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Statistics from './Statistics';
 
-function FullReview() {
-  const [aircrafts, setAircrafts] = useState([]);
+function FullReview({aircrafts, statuses}) {
   const [selectedAircraft, setSelectedAircraft] = useState(null);
   const [usageData, setUsageData] = useState([]);
   const [month, setMonth] = useState('');
-  const [statuses, setStatuses] = useState('');
-
-  // Gépek betöltése
-  useEffect(() => {
-    async function fetchAircrafts() {
-      const list = await window.api.getAircrafts();
-      setAircrafts(list);
-    }
-    fetchAircrafts();
-  }, []);
 
   // Adatok betöltése
   useEffect(() => {
@@ -38,23 +27,24 @@ function FullReview() {
     fetchData();
   }, [selectedAircraft, month]);
 
-  // Státuszok betöltése
-useEffect(() => {
-  async function fetchStatuses() {
-    const list = await window.api.getStatuses();
-    setStatuses(list);
-  }
-  fetchStatuses();
-}, []);
+
+// ---- Segédfüggvények a státuszokhoz ---- ne számoljuk újra minden rendernél
+const statusMap = useMemo(() => {
+  const map = {};
+  statuses.forEach(s => {
+    map[s.jelkod] = { color: s.color, meaning: s.jelentes };
+  });
+  return map;
+}, [statuses]);
 
 function getStatusColor(code) {
-  const status = statuses.find(s => s.jelkod === code);
-  return status ? status.color : 'transparent';
+  return statusMap[code]?.color || 'transparent';
 }
+
 function getStatusMeaning(code) {
-  const status = statuses.find(s => s.jelkod === code);
-  return status ? status.jelentes : 'Ismeretlen';
+  return statusMap[code]?.meaning || 'Ismeretlen';
 }
+
 
 const usageMap = useMemo(() => {
     const map = {}; // map[datum][hour] = status
@@ -118,7 +108,7 @@ const calendarMatrix = useMemo(() => {
         ))}
       </div>
 
-      <Statistics selectedAircraft={selectedAircraft}/>
+      <Statistics selectedAircraft={selectedAircraft} statuses={statuses}/>
 
       <div className="mb-4">
         <label className="form-label">

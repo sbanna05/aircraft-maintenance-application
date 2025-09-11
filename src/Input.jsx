@@ -1,35 +1,15 @@
-import React, { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import "./App.css"; // Assuming you have some styles for the Input component
 
-function Input() {
-  const [aircrafts, setAircrafts] = useState([]);
-  const [airports, setAirports] = useState([]);
-  const [schedules, setSchedules] = useState([]);
-  const [events, setEvents] = useState([]);
+function Input({aircrafts, airports, statuses, schedules, setSchedules}) {
   const [formData, setFormData] = useState({
     aircraft: "",
     airport: "LHDC",
-    event: "",
+    status: "",
     start: "",
     end: "",
     note: "",
   });
-
-  useEffect(() => {
-    async function fetchAll() {
-      const [schedules, aircrafts, airports, events] = await Promise.all([
-        window.api.getSchedules(),
-        window.api.getAircrafts(),
-        window.api.getAirports(),
-        window.api.getStatuses(),
-      ]);
-      setSchedules(schedules);
-      setAircrafts(aircrafts);
-      setAirports(airports);
-      setEvents(events);
-    }
-    fetchAll();
-  }, []);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -58,7 +38,7 @@ function Input() {
     if (
       !formData.aircraft ||
       !formData.airport ||
-      !formData.event ||
+      !formData.status ||
       !formData.start ||
       !formData.end
     ) {
@@ -89,7 +69,7 @@ function Input() {
     const result = await window.api.addSchedule(
       formData.aircraft,
       formData.airport,
-      formData.event,
+      formData.status,
       formData.start,
       formData.end,
       formData.note
@@ -121,11 +101,10 @@ function Input() {
               startDate.getSeconds()
             )}`;
 
-
           await window.api.updateSchedule(c.event_id, {
             aircraft: formData.aircraft,
             airport: formData.airport,
-            status: formData.event,
+            status: formData.status,
             event_timestamp,
             note: formData.note,
           });
@@ -143,7 +122,7 @@ function Input() {
     setFormData({
       aircraft: "",
       airport: "LHDC",
-      event: "",
+      status: "",
       start: "",
       end: "",
       note: "",
@@ -172,7 +151,8 @@ function Input() {
   // Lapozáshoz szükséges adatok
   const indexOfLastRow = currentPage * rowsPerPage;
   const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-  const currentRows = schedules.slice(indexOfFirstRow, indexOfLastRow);
+  const currentRows = useMemo(() => schedules.slice(indexOfFirstRow, indexOfLastRow), [schedules, indexOfFirstRow, indexOfLastRow]);
+
   const totalPages = Math.ceil(schedules.length / rowsPerPage);
 
   return (
@@ -223,15 +203,15 @@ function Input() {
             </td>
             <td>
               <select
-                name="event"
-                id="event"
-                value={formData.event}
+                name="status"
+                id="status"
+                value={formData.status}
                 onChange={handleChange}
               >
                 <option value="">Válassz eseményt</option>
-                {events.map((event) => (
-                  <option key={event.jelkod} value={event.jelkod}>
-                    {event.jelentes}
+                {statuses.map((status) => (
+                  <option key={status.jelkod} value={status.jelkod}>
+                    {status.jelentes}
                   </option>
                 ))}
               </select>

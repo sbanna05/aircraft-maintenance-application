@@ -1,9 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import  { useState, useEffect } from 'react'
 
-const Editor = () => {
-  const [aircrafts, setAircrafts] = useState([])
-  const [statuses, setStatuses] = useState([])
-  const [airports, setAirports] = useState([])
+const Editor = ({aircrafts, airports, statuses, setAircrafts, setAirports, setStatuses}) => {
   const [users, setUsers] = useState([])
 
   // új rekord state-ek
@@ -13,9 +10,6 @@ const Editor = () => {
   const [newUser, setNewUser] = useState({ username: "", password: "", role: "" })
 
   // adatbetöltések
-  useEffect(() => { window.api.getAircrafts().then(setAircrafts) }, [])
-  useEffect(() => { window.api.getStatuses().then(setStatuses) }, [])
-  useEffect(() => { window.api.getAirports().then(setAirports) }, [])
   useEffect(() => { window.api.getUsers().then(setUsers) }, [])
 
   // --- Aircraft mentés ---
@@ -88,7 +82,14 @@ const Editor = () => {
               <td>{aircraft.name}</td>
               <td>{aircraft.type}</td>
               <td>{aircraft.fogyasztas}</td>
-              <td><button className="btn btn-danger btn-sm" onClick={() => window.api.deleteAircraft(aircraft.id)}>Delete</button></td>
+              <td>
+                <button className="btn btn-danger btn-sm" 
+                    onClick={async () => {
+                              await window.api.deleteAircraft(aircraft.id)
+                              setAircrafts(await window.api.getAircrafts())
+                    }}>Delete
+              </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -117,7 +118,13 @@ const Editor = () => {
               <td>{status.jelkod}</td>
               <td>{status.jelentes}</td>
               <td style={{ backgroundColor: status.color }}>{status.color}</td>
-                <td><button className="btn btn-danger btn-sm" onClick={() => window.api.deleteStatus(status.id)}>Delete</button></td>
+                <td>
+                  <button className="btn btn-danger btn-sm" 
+                  onClick={async () => window.api.deleteStatus(status.id)
+                    .then(() => setStatuses(window.api.getStatuses()))
+                  }>
+                    Delete
+                    </button></td>
             </tr>
           ))}
         </tbody>
@@ -146,7 +153,9 @@ const Editor = () => {
               <td>{airport.repter}</td>
               <td>{airport.repter_id}</td>
               <td>{airport.nyitvatartas}</td>
-              <td><button className="btn btn-danger btn-sm" onClick={() => window.api.deleteAirport(airport.id)}>Delete</button></td>
+              <td><button className="btn btn-danger btn-sm" onClick={async () => window.api.deleteAirport(airport.id)
+                .then(() => setAirports(window.api.getAirports()))
+              }>Delete</button></td>
             </tr>
           ))}
         </tbody>
@@ -175,7 +184,10 @@ const Editor = () => {
               <td>{user.username}</td>
               <td>{user.password}</td>
               <td>{user.role}</td>
-              <td><button className="btn btn-danger btn-sm" onClick={() => window.api.deleteUser(user.id)}>Delete</button></td>
+              <td><button className="btn btn-danger btn-sm" onClick={async () => window.api.deleteUser(user.id)
+                .then(() => setUsers(window.api.getUsers()))
+              }
+                >Delete</button></td>
             </tr>
           ))}
         </tbody>

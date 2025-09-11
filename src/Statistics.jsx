@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
-function Statistics({ selectedAircraft }) {
-  const [statuses, setStatuses] = useState([]);
+function Statistics({ selectedAircraft, statuses }) {
   const [statsbymonth, setStatsByMonth] = useState([]);
   const [cache, setCache] = useState({}); // egyszerű cache a hónapokhoz
 
@@ -112,9 +111,9 @@ useEffect(() => {
       availableHours,
     };
 
-    // minden státuszt megjelenítünk (m kivéve)
+    // minden státuszt megjelenítünk (n kivéve)
     const rows = statuses
-      .filter((s) => !["m","n"].includes(s.jelkod))
+      .filter((s) => !["n"].includes(s.jelkod))
       .map((s) => {
         const count = statusCounts[s.jelkod] || 0;
         const percent = total ? ((count / total) * 100).toFixed(1) : 0;
@@ -157,7 +156,6 @@ useEffect(() => {
                   <td><b>Összesen (hónap óraszám)</b></td>
                   <td>{summary.totalHours}</td>
                   <td>{'100%'}</td>
-                  
                 </tr>
                 <tr>
                   <td>Domináns reptér</td>
