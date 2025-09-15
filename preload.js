@@ -2,7 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
   getAircrafts: () => ipcRenderer.invoke('get-aircrafts'),
-  getSchedules: (name, filter) => ipcRenderer.invoke('get-schedules', name, filter),
+  getSchedules: (year, name, filter) => ipcRenderer.invoke('get-schedules',year, name, filter),
   getStatuses: () => ipcRenderer.invoke('get-statuses'),
   getAirports: () => ipcRenderer.invoke('get-airports'),
   getUsers: () => ipcRenderer.invoke('get-users'),

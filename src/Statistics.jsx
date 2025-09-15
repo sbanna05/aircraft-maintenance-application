@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-function Statistics({ selectedAircraft, statuses, schedules, airports }) {
+function Statistics({ selectedAircraft, statuses, schedules, airports, year }) {
   const [statsbymonth, setStatsByMonth] = useState([]);
   const [cache, setCache] = useState({}); // egyszerű cache a hónapokhoz
 
@@ -82,7 +82,7 @@ function Statistics({ selectedAircraft, statuses, schedules, airports }) {
 
   // Biztosabb hónap-kinyerés: kezeli az "YYYY-MM-DD", "YYYY.MM.DD" és "YYYY.MM.DD." formátumokat is
   function getMonthlyStats(monthIdx) {
-    const monthly = statsbymonth.filter((s) => s.monthIdx === monthIdx);
+    const monthly = statsbymonth.filter((s) => s.monthIdx === monthIdx && s.year === year);
     if (monthly.length === 0) return { summary: null, rows: [] };
     const statusCounts = {}; //összesített státusz darabszám
     const airportCounter = {};
@@ -115,11 +115,13 @@ function Statistics({ selectedAircraft, statuses, schedules, airports }) {
       hetvege: { open: 9, close: 14 },
       hetkoznap: { open: 6, close: 16 },
     };
-
+    
+    //const year = new Date().getFullYear();
+    //console.log("year:", year);
     schedules
       .filter((sch) => {
         const dt = parseDateTime(sch.event_timestamp);
-        return dt.getMonth() === monthIdx && sch.aircraft === selectedAircraft;
+        return dt.getMonth() === monthIdx && dt.getFullYear() === year && sch.aircraft === selectedAircraft;
       })
       .forEach((sch) => {
         const dt = parseDateTime(sch.event_timestamp);
@@ -134,14 +136,9 @@ function Statistics({ selectedAircraft, statuses, schedules, airports }) {
         }
       });
     // adott hónap napjainak száma, és nyitvatartási órák számítása
-    const year = new Date().getFullYear();
-    const { weekdays, weekends, daysInMonth } = countWeekdaysAndWeekends(
-      year,
-      monthIdx
-    );
+    const { weekdays, weekends, daysInMonth } = countWeekdaysAndWeekends(year, monthIdx);
 
-    const weekdayHours =
-      openingRules.hetkoznap.close - openingRules.hetkoznap.open;
+    const weekdayHours = openingRules.hetkoznap.close - openingRules.hetkoznap.open;
     const weekendHours = openingRules.hetvege.close - openingRules.hetvege.open;
 
     const totalOpenHours = weekdays * weekdayHours + weekends * weekendHours;
@@ -156,10 +153,7 @@ function Statistics({ selectedAircraft, statuses, schedules, airports }) {
       closedHours,
       notamHours,
       availableHours,
-      inClosedHourCountFull: Object.values(statusOutOfOpening).reduce(
-        (a, b) => a + b,
-        0
-      ),
+      inClosedHourCountFull: Object.values(statusOutOfOpening).reduce((a, b) => a + b,0),
     };
 
     // minden státuszt megjelenítünk (n kivéve)
@@ -202,6 +196,7 @@ function Statistics({ selectedAircraft, statuses, schedules, airports }) {
               borderRadius: "8px",
               padding: "0.5rem",
               backgroundColor: "#fafafa",
+              maxWidth: "400px"
             }}
           >
             <h4 style={{ textAlign: "center", fontSize: "1rem" }}>{month}</h4>

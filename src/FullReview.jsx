@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Statistics from "./Statistics";
 
 function FullReview({ aircrafts, statuses, schedules, airports }) {
   const [selectedAircraft, setSelectedAircraft] = useState(null);
   const [usageData, setUsageData] = useState([]);
   const [month, setMonth] = useState("");
+  const [year, setYear] = useState(new Date().getFullYear());
 
   // Adatok betöltése
   useEffect(() => {
@@ -15,17 +16,26 @@ function FullReview({ aircrafts, statuses, schedules, airports }) {
     async function fetchData() {
       let yearMonth = null;
       if (month) {
-        const [yearFull, monthStr] = month.split("-"); // ["2025", "05"]
-        yearMonth = `${yearFull}.${monthStr}.%`; // pl. "2025.02.%"
-        //const monthNum = String(parseInt(monthStr, 10)); // 5 vagy 05 helyett 5
-        //yearMonth = `${yearFull}.${monthNum}.%`;
+        const [, monthStr] = month.split("-"); // csak a hónap szám kell
+        yearMonth = `${year}.${monthStr}.%`; // most a year state-et használjuk
       }
-      const data = await window.api.getSchedules(selectedAircraft, yearMonth);
+      const data = await window.api.getSchedules(year, selectedAircraft, yearMonth);
       console.log("usageData:", data);
       setUsageData(data);
     }
     fetchData();
-  }, [selectedAircraft, month]);
+  }, [year, selectedAircraft, month]);
+
+  // Évlista a schedules alapján
+  const  availableYears = useMemo(() => {
+      const yearsSet = new Set();
+      schedules.forEach((sch) => {
+        if (!sch.event_timestamp) return;
+        const y = parseDateTime(sch.event_timestamp).getFullYear();
+        yearsSet.add(y);
+      });
+      return Array.from(yearsSet).sort((a,b) => b - a); // csökkenő sorrend
+    }, [schedules]);  
 
   // ---- Segédfüggvények a státuszokhoz ---- ne számoljuk újra minden rendernél
   const statusMap = useMemo(() => {
@@ -95,21 +105,40 @@ function FullReview({ aircrafts, statuses, schedules, airports }) {
   return (
     <>
       <div className="mt-2">
-        <h2 className="mb-3 center">Gépek</h2>
-        <div className="mb-4 d-flex flex-wrap">
-          {aircrafts.map(({ name }) => (
-            <button
-              key={name}
-              onClick={() => setSelectedAircraft(name)}
-              className={`btn me-2 mb-2 ${
-                selectedAircraft === name
-                  ? "btn-success"
-                  : "btn-outline-secondary"
-              }`}
+        <div className="d-flex mb-4 justify-content-between align-items-center">
+          <div className="d-flex flex-column align-items-center">
+            <h2 className="mb-3 align-middle">Gépek</h2>
+            <div className="mb-4 d-flex flex-wrap">
+              {aircrafts.map(({ name }) => (
+                <button
+                  key={name}
+                  onClick={() => setSelectedAircraft(name)}
+                  className={`btn me-2 mb-2 ${
+                    selectedAircraft === name
+                      ? "btn-success"
+                      : "btn-outline-secondary"
+                  }`}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          </div>
+  
+          <div className="mb-4">
+            <strong>Év kiválasztása:</strong>
+            <select
+              className="form-select d-inline-block w-auto ms-2"
+              value={year}
+              onChange={(e) => setYear(parseInt(e.target.value, 10))}
             >
-              {name}
-            </button>
-          ))}
+              {availableYears.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <Statistics
@@ -117,8 +146,10 @@ function FullReview({ aircrafts, statuses, schedules, airports }) {
           statuses={statuses}
           schedules={schedules}
           airports={airports}
+          year={year}
         />
-
+      </div>
+      <div>
         <div className="mb-4">
           <label className="form-label">
             Hónap kiválasztása:
@@ -175,3 +206,12 @@ function FullReview({ aircrafts, statuses, schedules, airports }) {
 }
 
 export default FullReview;
+
+
+function parseDateTime(event_timestamp) {
+    const [datumStr, timeStr] = event_timestamp.split(" ");
+    // datumStr: "2025.01.01"
+    const [y, m, d] = datumStr.split(".").map(Number);
+    const [hh, mm, ss] = timeStr.split(":").map(Number);
+    return new Date(y, m - 1, d, hh, mm, ss); // hónap 0-indexes!
+  }

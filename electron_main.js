@@ -149,7 +149,7 @@ ipcMain.handle('get-airports', () => {
 
 
 
-ipcMain.handle('get-schedules', (event, aircraftName, yearMonth) => {
+ipcMain.handle('get-schedules', (event, year = null, aircraftName, yearMonth) => {
   let query = `
     SELECT 
       s.event_id,
@@ -165,9 +165,14 @@ ipcMain.handle('get-schedules', (event, aircraftName, yearMonth) => {
     LEFT JOIN aircrafts a ON s.aircraft_id = a.id
     LEFT JOIN airports ap ON s.airport_id = ap.id
     LEFT JOIN statuses st ON s.status_id = st.id
-    WHERE 1=1
+    WHERE 1=1 
   `;
   const params = [];
+
+  if (year) {
+    query += ` AND CAST(substr(s.event_timestamp, 1, 4) AS INTEGER) = ?`;
+    params.push(year);
+  }
 
   if (aircraftName) {
     query += ` AND a.name = ?`;
@@ -202,6 +207,7 @@ ipcMain.handle('get-users', () => {
 ipcMain.handle('get-stats-by-month', (event, gepAzonosito) => {
   const query = `
     SELECT 
+      CAST(substr(s.event_timestamp, 1, 4) AS INTEGER) AS year,
       CAST(substr(s.event_timestamp, 6, 2) AS INTEGER) - 1 AS monthIdx,
       st.jelkod,
       COUNT(*) as count,
@@ -213,8 +219,8 @@ ipcMain.handle('get-stats-by-month', (event, gepAzonosito) => {
     left join airports ap on ap.id = s.airport_id
     WHERE a.name = ?
       AND st.jelkod <> '-'
-    GROUP BY monthIdx, st.jelkod
-    ORDER BY monthIdx;
+    GROUP BY year, monthIdx, st.jelkod
+    ORDER BY year, monthIdx;
   `;
   return db.prepare(query).all(gepAzonosito);
 });
