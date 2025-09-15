@@ -59,6 +59,23 @@ function isWithinOpening(begin, rule) {
   return hour >= rule.open && hour <= rule.close;
 }
 
+function countWeekdaysAndWeekends(year, monthIdx) {
+  let weekdays = 0;
+  let weekends = 0;
+
+  const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const day = new Date(year, monthIdx, d).getDay(); // 0=vasárnap, 6=szombat
+    if (day === 0 || day === 6) {
+      weekends++;
+    } else {
+      weekdays++;
+    }
+  }
+  return { weekdays, weekends, daysInMonth };
+}
+
   // Biztosabb hónap-kinyerés: kezeli az "YYYY-MM-DD", "YYYY.MM.DD" és "YYYY.MM.DD." formátumokat is
  function getMonthlyStats(monthIdx) {
     const monthly = statsbymonth.filter((s) => s.monthIdx === monthIdx)
@@ -112,25 +129,15 @@ function isWithinOpening(begin, rule) {
           statusOutOfOpening[sch.status] = (statusOutOfOpening[sch.status] || 0) + 1;
         }
       });
-    // hónap napjai
+    // adott hónap napjainak száma, és nyitvatartási órák számítása
     const year = new Date().getFullYear();
-    const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+    const { weekdays, weekends, daysInMonth } = countWeekdaysAndWeekends(year, monthIdx);
 
-    let totalOpenHours = 0;
-    let closedHours = 0;
+    const weekdayHours = openingRules.hetkoznap.close - openingRules.hetkoznap.open;
+    const weekendHours = openingRules.hetvege.close - openingRules.hetvege.open;
 
-    for (let d = 1; d <= daysInMonth; d++) {
-      const day = new Date(year, monthIdx, d).getDay(); // 0=vasárnap, 6=szombat
-      
-      const rule = day === 0 || day === 6 ? openingRules.hetvege : openingRules.hetkoznap;
-      const openStart = rule.open;
-      const openEnd = rule.close;
-
-      // napi nyitvatartási órák
-      const openHours = openEnd - openStart;
-      totalOpenHours += openHours;
-      closedHours += 24 - openHours;
-    }
+    const totalOpenHours = weekdays * weekdayHours + weekends * weekendHours;
+    const closedHours = daysInMonth * 24 - totalOpenHours;
     
     const notamHours = statusCounts["n"] || 0;
     const availableHours = totalOpenHours - notamHours;
