@@ -16,8 +16,7 @@ function FullReview({ aircrafts, statuses, schedules, airports }) {
     async function fetchData() {
       let yearMonth = null;
       if (month) {
-        const [, monthStr] = month.split("-"); // csak a hónap szám kell
-        yearMonth = `${year}.${monthStr}.%`; // most a year state-et használjuk
+        yearMonth = `${year}.${month}.%`; // most a year state-et használjuk
       }
       const data = await window.api.getSchedules(year, selectedAircraft, yearMonth);
       console.log("usageData:", data);
@@ -35,7 +34,7 @@ function FullReview({ aircrafts, statuses, schedules, airports }) {
         yearsSet.add(y);
       });
       return Array.from(yearsSet).sort((a,b) => b - a); // csökkenő sorrend
-    }, [schedules]);  
+    }, [schedules]);
 
   // ---- Segédfüggvények a státuszokhoz ---- ne számoljuk újra minden rendernél
   const statusMap = useMemo(() => {
@@ -155,8 +154,11 @@ function FullReview({ aircrafts, statuses, schedules, airports }) {
             Hónap kiválasztása:
             <input
               type="month"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
+              value={month ? `${year}-${month}`: ""}
+              onChange={(e) => {
+                const [, m] = e.target.value.split("-");
+                setMonth(m);
+              }}
               className="form-control mb-2"
               style={{ width: "auto" }}
             />
