@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Statistics from './Statistics';
 
-function FullReview({aircrafts, statuses}) {
+function FullReview({aircrafts, statuses, schedules, airports}) {
   const [selectedAircraft, setSelectedAircraft] = useState(null);
   const [usageData, setUsageData] = useState([]);
   const [month, setMonth] = useState('');
@@ -108,7 +108,7 @@ const calendarMatrix = useMemo(() => {
         ))}
       </div>
 
-      <Statistics selectedAircraft={selectedAircraft} statuses={statuses}/>
+      <Statistics selectedAircraft={selectedAircraft} statuses={statuses} schedules={schedules} airports={airports}/>
 
       <div className="mb-4">
         <label className="form-label">

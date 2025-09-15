@@ -154,6 +154,7 @@ ipcMain.handle('get-schedules', (event, aircraftName, yearMonth) => {
     SELECT 
       s.event_id,
       s.event_timestamp,
+      substr(s.event_timestamp, 11) AS kezdes,
       substr(s.event_timestamp, 1, 10) AS datum,
       s.created,
       s.note,

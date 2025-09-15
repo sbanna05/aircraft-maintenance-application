@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-function Statistics({ selectedAircraft, statuses }) {
+function Statistics({ selectedAircraft, statuses, schedules, airports }) {
   const [statsbymonth, setStatsByMonth] = useState([]);
   const [cache, setCache] = useState({}); // egyszerű cache a hónapokhoz
 
@@ -18,15 +18,6 @@ function Statistics({ selectedAircraft, statuses }) {
     "November",
     "December",
   ];
-
-  useEffect(() => {
-    async function fetchStatuses() {
-      const list = await window.api.getStatuses();
-      setStatuses(Array.isArray(list) ? list : []);
-    }
-    fetchStatuses();
-  }, []);
-
   
 useEffect(() => {
   if (!selectedAircraft) return;
@@ -44,20 +35,45 @@ useEffect(() => {
   fetchStats();
 }, [selectedAircraft]);
 
+function parseDateTime(event_timestamp) {
+  const [datumStr, timeStr] = event_timestamp.split(" ");
+  // datumStr: "2025.01.01"
+  const [y, m, d] = datumStr.split(".").map(Number);
+  const [hh, mm, ss] = timeStr.split(":").map(Number);
+  return new Date(y, m - 1, d, hh, mm, ss); // hónap 0-indexes!
+}
+
+
+function getOpeningRule(airportname, datum) {
+  const defaultHours = { hetvege: { open: 9, close: 14 }, hetkoznap: { open: 6, close: 16 } };
+  const airport = airports.find(a => a.repter_id === airportname);
+  const openingHours = airport?.nyitvatartas
+    ? JSON.parse(airport.nyitvatartas) : defaultHours;
+  const day = datum.getDay();
+  return (day === 0 || day === 6) ? openingHours.hetvege || defaultHours.hetvege
+                                  : openingHours.hetkoznap || defaultHours.hetkoznap;
+}
+
+function isWithinOpening(begin, rule) {
+  const hour = begin.getHours();
+  return hour >= rule.open && hour <= rule.close;
+}
+
   // Biztosabb hónap-kinyerés: kezeli az "YYYY-MM-DD", "YYYY.MM.DD" és "YYYY.MM.DD." formátumokat is
-  function getMonthlyStats(monthIdx) {
+ function getMonthlyStats(monthIdx) {
     const monthly = statsbymonth.filter((s) => s.monthIdx === monthIdx)
     if (monthly.length === 0) return { summary: null, rows: [] };
     ;
 
-    let total = 0;
-    const statusCounts = {};
+    const statusCounts = {}; //összesített státusz darabszám
     const airportCounter = {};
     const airportHours = {};
 
+    const statusOutOfOpening = {}; // zárvatartási órákon kívüli státuszok darabszáma
+    const statusInOpening = {}; // nyitvatartási órákon belüli státuszok darabszáma
+
     monthly.forEach((s) => {
       statusCounts[s.jelkod] = s.count;
-      total += s.count;
 
       if (s.airport) {
         airportCounter[s.airport] = (airportCounter[s.airport] || 0) + 1;
@@ -80,6 +96,22 @@ useEffect(() => {
         hetvege: { open: 9, close: 14 },
         hetkoznap: { open: 6, close: 16 },
       };
+
+    schedules.filter((sch) => {
+        const dt = parseDateTime(sch.event_timestamp);
+        return dt.getMonth() === monthIdx && sch.aircraft === selectedAircraft;
+      })
+      .forEach((sch) => {
+        const dt = parseDateTime(sch.event_timestamp);
+        const rule = getOpeningRule(dominantAirport, dt);
+        const inside = isWithinOpening(dt, rule);
+
+        if (inside) {
+          statusInOpening[sch.status] = (statusInOpening[sch.status] || 0) + 1;
+        } else {
+          statusOutOfOpening[sch.status] = (statusOutOfOpening[sch.status] || 0) + 1;
+        }
+      });
     // hónap napjai
     const year = new Date().getFullYear();
     const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
@@ -109,19 +141,22 @@ useEffect(() => {
       closedHours,
       notamHours,
       availableHours,
+      inClosedHourCountFull: Object.values(statusOutOfOpening).reduce((a,b) => a+b, 0)
     };
 
     // minden státuszt megjelenítünk (n kivéve)
     const rows = statuses
-      .filter((s) => !["n"].includes(s.jelkod))
+      .filter((s) => !["n","-"].includes(s.jelkod))
       .map((s) => {
         const count = statusCounts[s.jelkod] || 0;
-        const percent = total ? ((count / total) * 100).toFixed(1) : 0;
+        const percent = availableHours ? ((count / availableHours) * 100).toFixed(1) : 0;        
         return {
           jelkod: s.jelkod,
           megnevezes: s.jelentes ?? "",
           count,
           percent,
+          inClosedHourCount: statusOutOfOpening[s.jelkod] || 0,
+          inOpenHourCount: statusInOpening[s.jelkod] || 0,
         };
       });
 
@@ -177,6 +212,11 @@ useEffect(() => {
                   <td><b>{summary.availableHours}</b></td>
                   <td><b>{((summary.availableHours / summary.totalHours) * 100).toFixed(1)}%</b></td>
                 </tr>
+                <tr>
+                  <td>Zárvatartási órákon kívüli események</td>
+                  <td>{summary.inClosedHourCountFull}</td>
+                  <td>{summary.availableHours ? ((summary.inClosedHourCountFull / summary.availableHours) * 100).toFixed(1) : 0}%</td>
+                </tr>
               </tbody>
             </table>
             
@@ -193,7 +233,7 @@ useEffect(() => {
               <thead>
                 <tr>
                   <th>Státusz</th>
-                  <th>Darab</th>
+                  <th>Darab: Nyitva/Zárva</th>
                   <th>%</th>
                 </tr>
               </thead>
@@ -201,7 +241,9 @@ useEffect(() => {
                 {rows.map((row) => (
                   <tr key={row.jelkod}>
                     <td>{row.megnevezes}</td>
-                    <td>{row.count}</td>
+                    <td>
+                      <b>{row.count}</b>: ({row.inOpenHourCount}/{row.inClosedHourCount})
+                    </td>
                     <td>{row.percent}%</td>
                   </tr>
                 ))}

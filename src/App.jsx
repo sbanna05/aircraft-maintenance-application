@@ -40,7 +40,7 @@ function App() {
 
       {page === 'home' && <Input aircrafts={aircrafts} airports={airports} statuses={statuses} 
         schedules={schedules} setSchedules={setSchedules}/>}
-      {page === 'statistics' && <FullReview aircrafts={aircrafts} statuses={statuses} />}
+      {page === 'statistics' && <FullReview aircrafts={aircrafts} statuses={statuses} schedules={schedules} airports={airports}/>}
       {page === 'editor' && (
           <Editor
             aircrafts={aircrafts}
