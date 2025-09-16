@@ -59,6 +59,18 @@ majd a main.jsx fájlban, hogy használni is tudjuk majd a stílushoz:
 import 'bootstrap/dist/css/bootstrap.min.css';
 ```
 
+### Loginhoz
+
+```bash
+npm install react-router-dom
+```
+
+valamint a jelszóvédelemhez
+
+```bash
+npm install argon2
+```
+
 ### Ellenőrzés
 
 A package.json-ban legyen benne:
@@ -140,7 +152,7 @@ CREATE TABLE statuses (
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(50)
 );
 

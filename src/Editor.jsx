@@ -182,7 +182,7 @@ const Editor = ({aircrafts, airports, statuses, setAircrafts, setAirports, setSt
           {users.map((user, index) => (
             <tr key={index}>
               <td>{user.username}</td>
-              <td>{user.password ? "******" : ''}</td>
+              <td>{user.password_hash ? "******" : ''}</td>
               <td>{user.role}</td>
               <td><button className="btn btn-danger btn-sm" onClick={async () => window.api.deleteUser(user.id)
                 .then(() => setUsers(window.api.getUsers()))

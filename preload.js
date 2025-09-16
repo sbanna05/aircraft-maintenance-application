@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('api', {
   getAirports:async () => await ipcRenderer.invoke('get-airports'),
   getUsers:async () => await ipcRenderer.invoke('get-users'),
   getStatsByMonth:async (gepAzonosito) => await ipcRenderer.invoke('get-stats-by-month', gepAzonosito),
+
+  handleLogin :async (username, password) => await ipcRenderer.invoke('handleLogin', username, password),
   
   addAircraft:async (name, type, consumption) => await ipcRenderer.invoke('add-aircraft', name, type, consumption),
   addSchedule:async (aircraft, airport, event, start, end, note) => await ipcRenderer.invoke('add-schedule', aircraft, airport, event, start, end, note),

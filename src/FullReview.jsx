@@ -106,7 +106,7 @@ function FullReview({ aircrafts, statuses, schedules, airports }) {
   return (
     <>
       <div className="mt-2">
-        <div className="d-flex mb-4 justify-content-between align-items-center">
+        <div className="d-flex mb-4 justify-content-around align-items-center">
           <div className="d-flex flex-column align-items-center">
             <h2 className="mb-3 align-middle">Gépek</h2>
             <div className="mb-4 d-flex flex-wrap">

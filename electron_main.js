@@ -1,7 +1,9 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const mariadb = require('mariadb');
+const argon2 = require('argon2');
 
+// MariaDB kapcsolat létrehozása
 const pool = mariadb.createPool({
   host: 'localhost',
   user: 'root',
@@ -20,6 +22,42 @@ async function query(sql, params =[]) {
     if (conn) conn.release(); // visszaadjuk a poolnak a kapcsolatot
   }
 }
+
+// =================== Bejelentkezés ==========================
+ipcMain.handle('handleLogin', async (e, arg1, arg2) => {
+  const payload = (arg1 && typeof arg1 === 'object')
+    ? arg1
+    : { username: arg1, password: arg2 };
+
+  const username = String(payload?.username ?? '').trim();
+  const password = String(payload?.password ?? '');
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const rows = await conn.query(
+      `SELECT id, username, role, password_hash FROM users WHERE username = ?`,
+      [username]
+    );
+
+    if (rows.length === 0) throw new Error('Hibás felhasználónév vagy jelszó');
+
+    const user = rows[0];
+
+    // Jelszó ellenőrzés
+    const ok = await argon2.verify(user.password_hash, password);
+    if (!ok) throw new Error('Hibás felhasználónév vagy jelszó');
+
+    return { id: user.id, username: user.username, role: user.role };
+  } catch (err) {
+    console.error('Login hiba:', err);
+    throw err;
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
+
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -42,17 +80,12 @@ function createWindow() {
 }
 
 
-
 app.whenReady().then(() => {
   createWindow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
-});
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
 });
 
 
@@ -229,9 +262,21 @@ ipcMain.handle('add-status', async (event, code, description, color) => {
 });
 
 ipcMain.handle('add-user', async (event, username, password, role) => {
-  const sql = 'INSERT INTO users (username, password, role) VALUES (?, ?, ?)';
-  const result = await query(sql, [username, password, role]);
-  return result;
+  const hash = await argon2.hash(String(password), { type: argon2.argon2id, timeCost: 3, memoryCost: 19456 });
+  
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const res = await conn.query(
+      `INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)`, [username, hash, role || 'user']
+    );
+    return res;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  } finally {
+    if (conn) conn.release();
+  }
 });
 
 // =================== TÖRLÉSEK ==========================

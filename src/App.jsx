@@ -6,6 +6,19 @@ import FullReview from './FullReview';
 
 function App() {
   const [page, setPage] = useState('home'); // kezdetben főoldal
+
+  useEffect(() => {
+    const savedPage = sessionStorage.getItem('page');
+    if (savedPage) {
+      setPage(savedPage);
+    }
+  }, []);
+
+  function handleSetPage(newPage) {
+    setPage(newPage);
+    sessionStorage.setItem('page', newPage);
+  }
+
   // Globális adatok
   const [aircrafts, setAircrafts] = useState([]);
   const [airports, setAirports] = useState([]);
@@ -38,9 +51,9 @@ function App() {
       <h1 className="text-center">Aircraft Maintenance Application</h1>
 
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
-        <button onClick={() => setPage('statistics')}>Statisztika</button>
-        <button onClick={() => setPage('home')}>Főoldal</button>
-        <button onClick={() => setPage('editor')}>Szerkesztő</button>
+        <button onClick={() => handleSetPage('statistics')}>Statisztika</button>
+        <button onClick={() => handleSetPage('home')}>Főoldal</button>
+        <button onClick={() => handleSetPage('editor')}>Szerkesztő</button>
       </div>
 
       {page === 'home' && <Input aircrafts={aircrafts} airports={airports} statuses={statuses} 
