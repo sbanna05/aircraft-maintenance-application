@@ -104,8 +104,7 @@ npm run start
 ```
 
 ## Főoldal - Input.jsx
-
-![főoldal](https://github.com/sbanna05/aircraft-maintenance-application/blob/main/images/ad_1.png)
+<img width="1562" height="728" alt="ad_1" src="https://github.com/user-attachments/assets/47279ebb-5f3a-41db-998e-2598786eca6b" />
 
 Lehetővé teszi hogy kiválasszuk a gépeket, repteret, eventstátuszt, kezdő vég időpontot és opcionális megjegyzést
 A kezdőidőpont beírása után automatikusan kitölti a végidőpontot kezdés +1 órával
