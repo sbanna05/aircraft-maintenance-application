@@ -184,9 +184,14 @@ const Editor = ({aircrafts, airports, statuses, setAircrafts, setAirports, setSt
               <td>{user.username}</td>
               <td>{user.password_hash ? "******" : ''}</td>
               <td>{user.role}</td>
-              <td><button className="btn btn-danger btn-sm" onClick={async () => window.api.deleteUser(user.id)
-                .then(() => setUsers(window.api.getUsers()))
-              }
+              <td> 
+                <button
+                    className="btn btn-danger btn-sm"
+                    onClick={async () => {
+                      await window.api.deleteUser(user.id);
+                      const refreshed = await window.api.getUsers(); // új lista lekérése
+                      setUsers(refreshed); // state frissítés
+                    }}
                 >Delete</button></td>
             </tr>
           ))}

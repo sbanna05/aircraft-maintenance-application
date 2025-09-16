@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const mariadb = require('mariadb');
-const argon2 = require('argon2');
+const bcrypt = require('bcryptjs');
 
 // MariaDB kapcsolat létrehozása
 const pool = mariadb.createPool({
@@ -43,7 +43,7 @@ ipcMain.handle('handleLogin', async (e, arg1, arg2) => {
 
     const user = rows[0];
     // Jelszó ellenőrzés
-    const ok = await argon2.verify(user.password_hash, password);
+    const ok = await bcrypt.compareSync(password, user.password_hash);
     if (!ok) throw new Error('Hibás felhasználónév vagy jelszó');
 
     return { id: user.id, username: user.username, role: user.role };
@@ -71,7 +71,7 @@ function createWindow() {
 
   const isDev = !app.isPackaged;
  if (isDev) {
-    win.loadURL('http://localhost:5173');
+   win.loadURL('http://localhost:5173');
   } else {
     win.loadFile(path.join(__dirname, 'dist', 'index.html'));
   }
@@ -260,8 +260,7 @@ ipcMain.handle('add-status', async (event, code, description, color) => {
 });
 
 ipcMain.handle('add-user', async (event, username, password, role) => {
-  const hash = await argon2.hash(String(password), { type: argon2.argon2id, timeCost: 3, memoryCost: 19456 });
-  
+  const hash = bcrypt.hashSync(String(password), 10); // 10 a saltRounds  
   let conn;
   try {
     conn = await pool.getConnection();
@@ -293,6 +292,11 @@ ipcMain.handle('delete-aircraft', async (event, id) => {
 // delete-status
 ipcMain.handle('delete-status', async (event, id) => {
   const result = await query('DELETE FROM statuses WHERE id = ?', [id]);
+  return result;
+});
+
+ipcMain.handle('delete-user', async (event, id) => {
+  const result = await query('DELETE FROM users WHERE id = ?', [id]);
   return result;
 });
 

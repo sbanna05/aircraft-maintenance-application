@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('api', {
   getStatuses:async () => await ipcRenderer.invoke('get-statuses'),
   getAirports:async () => await ipcRenderer.invoke('get-airports'),
   getUsers:async () => await ipcRenderer.invoke('get-users'),
+  
   getStatsByMonth:async (gepAzonosito) => await ipcRenderer.invoke('get-stats-by-month', gepAzonosito),
 
   handleLogin :async (username, password) => await ipcRenderer.invoke('handleLogin', username, password),
@@ -20,5 +21,6 @@ contextBridge.exposeInMainWorld('api', {
   deleteAircraft:async (id) => await ipcRenderer.invoke('delete-aircraft', id),
   deleteSchedule:async (id) => await ipcRenderer.invoke('delete-schedule', id),
   deleteStatus:async (id) => await ipcRenderer.invoke('delete-status', id),
+  deleteUser:async (id) => await ipcRenderer.invoke('delete-user', id),
 
 });

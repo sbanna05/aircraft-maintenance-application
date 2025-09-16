@@ -1,20 +1,35 @@
 {
   "name": "aircraft-maintenance-application",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.0.0",
   "main": "electron_main.js",
   "author": "Anna",
   "scripts": {
     "dev": "concurrently \"npm run dev:react\" \"npm run dev:electron\"",
     "dev:react": "vite",
     "dev:electron": "cross-env ELECTRON_START_URL=http://localhost:5173 electron .",
-    "build": "vite build && electron-builder",
+    "build": "npm run build:react && npm run build:electron",
+    "build:react": "vite build",
+    "build:electron": "electron-builder",
     "start": "electron .",
     "lint": "eslint .",
     "preview": "vite preview"
   },
+  "build": {
+    "appId": "com.example.aircraftmaintenance",
+    "productName": "Aircraft Maintenance Application",
+    "files": [
+      "dist/**",
+      "electron_main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    }
+  },
   "dependencies": {
-    "argon2": "^0.44.0",
+    "bcryptjs": "^3.0.2",
     "better-sqlite3": "^12.2.0",
     "bootstrap": "^5.3.7",
     "mariadb": "^3.4.5",
