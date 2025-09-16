@@ -16,7 +16,7 @@ function FullReview({ aircrafts, statuses, schedules, airports }) {
     async function fetchData() {
       let yearMonth = null;
       if (month) {
-        yearMonth = `${year}.${month}.%`; // most a year state-et használjuk
+        yearMonth = `${year}-${month}-%`; // most a year state-et használjuk
       }
       const data = await window.api.getSchedules(year, selectedAircraft, yearMonth);
       console.log("usageData:", data);
@@ -210,12 +210,3 @@ function FullReview({ aircrafts, statuses, schedules, airports }) {
 }
 
 export default FullReview;
-
-/*
-function parseDateTime(event_timestamp) {
-    const [datumStr, timeStr] = event_timestamp.split(" ");
-    // datumStr: "2025.01.01"
-    const [y, m, d] = datumStr.split(".").map(Number);
-    const [hh, mm, ss] = timeStr.split(":").map(Number);
-    return new Date(y, m - 1, d, hh, mm, ss); // hónap 0-indexes!
-  }*/

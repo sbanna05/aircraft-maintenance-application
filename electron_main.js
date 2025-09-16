@@ -39,8 +39,6 @@ function createWindow() {
   } else {
     win.loadFile(path.join(__dirname, 'dist', 'index.html'));
   }
- // win.loadFile(path.join(__dirname, 'frontend', 'index.html'));
-
 }
 
 

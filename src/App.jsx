@@ -35,7 +35,7 @@ function App() {
 
   return (
     <>
-      <h1>Aircraft Maintenance Application</h1>
+      <h1 className="text-center">Aircraft Maintenance Application</h1>
 
       <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
         <button onClick={() => setPage('statistics')}>Statisztika</button>

@@ -124,7 +124,7 @@ function Statistics({ selectedAircraft, statuses, schedules, airports, year }) {
         const rule = getOpeningRule(dominantAirport, dt);
         const inside = isWithinOpening(dt, rule);
 
-        console.log("Sch:", sch.datum, sch.kezdes, "->", dt, "Rule:", rule, "Inside:", inside);
+        //console.log("Sch:", sch.datum, sch.kezdes, "->", dt, "Rule:", rule, "Inside:", inside);
 
         if (inside) {
           statusInOpening[sch.status] = (statusInOpening[sch.status] || 0) + 1;
