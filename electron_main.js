@@ -36,14 +36,12 @@ ipcMain.handle('handleLogin', async (e, arg1, arg2) => {
   try {
     conn = await pool.getConnection();
     const rows = await conn.query(
-      `SELECT id, username, role, password_hash FROM users WHERE username = ?`,
-      [username]
+      `SELECT id, username, role, password_hash FROM users WHERE username = ?`, [username]
     );
 
     if (rows.length === 0) throw new Error('Hibás felhasználónév vagy jelszó');
 
     const user = rows[0];
-
     // Jelszó ellenőrzés
     const ok = await argon2.verify(user.password_hash, password);
     if (!ok) throw new Error('Hibás felhasználónév vagy jelszó');

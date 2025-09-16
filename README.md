@@ -105,7 +105,7 @@ npm run start
 
 ## Főoldal - Input.jsx
 
-![főoldal](images/ad_1.png)
+![főoldal](https://github.com/sbanna05/aircraft-maintenance-application/blob/main/images/ad_1.png)
 
 Lehetővé teszi hogy kiválasszuk a gépeket, repteret, eventstátuszt, kezdő vég időpontot és opcionális megjegyzést
 A kezdőidőpont beírása után automatikusan kitölti a végidőpontot kezdés +1 órával
@@ -113,17 +113,17 @@ Egyszerre nagyobb intervallumban is be lehet illeszteni eseményeket, ha nyitvat
 
 ## Statisztika - Fullreview.jsx és Statistics.jsx
 
-![stat](images/ad_2.png)
+![stat](https://github.com/sbanna05/aircraft-maintenance-application/blob/main/images/ad_2.png)
 
 Hónapos naptárkalendárium megjelenítés - hoverrel kiirja a jelentést is
 
-![calendar](images/ad_3.png)
+![calendar](https://github.com/sbanna05/aircraft-maintenance-application/blob/main/images/ad_3.png)
 
 ## Szerkesztő felület - Editor.jsx
 
 Hozzá lehet adni plusz eseményt/gépet/usert, a táblázat azzonnal frissül
 
-![editor](images/ad_4.png)
+![editor](https://github.com/sbanna05/aircraft-maintenance-application/blob/main/images/ad_4.png)
 
 ### Adatbázis -> mariadb  létrehozás
 
@@ -182,6 +182,7 @@ CREATE TABLE if not exists schedules (
 #### jelenlegi adatbázisból dump.sql -t készítünk (első lefuttatásnál az electron_main.js-be be lehet illeszeni aztán törölni)
 
 ```js
+const fs = require('fs');
 const tables = ["aircrafts", "airports", "statuses", "users", "schedules"];
 let dump = "";
 
@@ -208,8 +209,8 @@ majd lépj be a helyi mappába pl:
 cd "C:\Program Files\MariaDB 11.8\bin"
 ```
 
-futtasd a dump importot
+futtasd a dump importot pl.:
 
 ```bash
-mysql -u root -p aircrafts < "C:\eleresiut\aircraft-maintenance-application\dump.sql"
+mysql -u root -p aircrafts < "C:\Your\Path\aircraft-maintenance-application\dump.sql"
 ```
