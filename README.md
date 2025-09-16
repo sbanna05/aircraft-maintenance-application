@@ -82,9 +82,12 @@ npm run dev
 ### Build készítése electron-builddel
 
 ```bash
-npm run build```
+npm run build
+```
 
-# kész build futtatása
+### kész build futtatása
+
+```bash
 npm run start
 ```
 
