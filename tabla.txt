@@ -278,33 +278,6 @@ db.prepare(`CREATE TABLE IF NOT EXISTS data_table (
   ('Debrecen Nemzetközi Repülőtér', 'LHDC');
 `).run();
 
-db.prepare(`
-  INSERT OR IGNORE INTO aircrafts (name, type, fogyasztas) VALUES
-  ('HA-ENI', 'Tecnam P2006T', 40),
-  ('HA-ENM', 'Tecnam P2006T', 40),
-  ('HA-ENJ', 'Tecnam P2008JC', 20),
-  ('HA-ENK', 'Tecnam P2008JC', 20),
-  ('HA-ENL', 'Tecnam P2008JC', 20),
-  ('HA-ENY', 'Tecnam P2006T', 40);
-`).run();
-
-
-  db.prepare(`
-    INSERT OR IGNORE INTO statuses (jelkod, jelentes, color) VALUES
-    ('m', 'API szerint zárva', '#cdcdcd'),
-    ('z', 'repülőtér', '#f4b400'),
-    ('n', 'NOTAM', '#fb170f'),
-    ('s', 'korai sötétedés', '#434343'),
-    ('at', 'repülés lemondás (ATO, oktató)', '#f7e55cff'),
-    ('d', 'repülés lemondás (Diák)', '#b04ab7'),
-    ('dh', 'diákok haladási fázisa', '#f8c3f3'),
-    ('cs', 'személyzet csere', '#fae3af'),
-    ('o', 'kevés/nincs elérhető oktató', '#6c7bb1'),
-    ('sz', 'munkaszüneti nap', '#d1a587'),
-    ('a', 'repülésre alkalmatlan időjárás', '#d8736a'),
-    ('k', 'karbantartáson volt', '#8fb2cd'),
-    ('r', 'repült', '#66b65b')
-  `).run();
 
 
 // --- Adatbázis előkészítése ---
@@ -507,3 +480,115 @@ const Editor = () => {
 export default Editor
 
 
+============================================
+
+const tables = ["aircrafts", "airports", "statuses", "users", "schedules"];
+let dump = "";
+
+// minden táblát végigmegyünk
+tables.forEach(table => {
+  const rows = db.prepare(`SELECT * FROM ${table}`).all();
+  rows.forEach(row => {
+    const keys = Object.keys(row).join(", ");
+    const values = Object.values(row)
+      .map(v => v === null ? "NULL" : `'${String(v).replace(/'/g, "''")}'`)
+      .join(", ");
+    dump += `INSERT INTO ${table} (${keys}) VALUES (${values});\n`;
+  });
+});
+
+fs.writeFileSync("dump.sql", dump, "utf8");
+console.log("✅ dump.sql létrehozva");
+
+
+// --- Adatbázis táblák létrehozása ---
+/*
+db.prepare(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user'
+)`).run();
+
+db.prepare(`
+  INSERT OR IGNORE INTO users (username, password, role) VALUES
+  ('admin', 'admin', 'admin'),
+  ('Példa Béla', '1234', 'user')
+`).run();
+
+
+db.prepare(`CREATE TABLE IF NOT EXISTS aircrafts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL unique,
+    type TEXT NOT NULL,
+    fogyasztas INTEGER DEFAULT 0
+)`).run();
+
+db.prepare(`CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user'
+)`).run();
+
+db.prepare(`CREATE TABLE IF NOT EXISTS statuses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    jelkod TEXT NOT NULL,
+    jelentes TEXT NOT NULL,
+    color TEXT NOT NULL
+  )`).run();
+
+db.prepare(`CREATE TABLE IF NOT EXISTS data_table (
+    esemeny_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    gep_azonosito TEXT NOT NULL,
+    datum TEXT NOT NULL,
+    kezdes_idopont TEXT NOT NULL,
+    vege_idopont TEXT NOT NULL,
+    idotartam_perc INTEGER NOT NULL,
+    tevekenyseg_kod TEXT NOT NULL,
+    megjegyzes TEXT,
+    FOREIGN KEY (gep_azonosito) REFERENCES aircrafts(name)
+  )`).run();
+
+  db.prepare(`CREATE TABLE IF NOT EXISTS airports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    repter TEXT NOT NULL,
+    repter_id text NOT NULL,
+    nyitvatartas TEXT
+  )`).run();
+
+  db.prepare(`
+  INSERT OR IGNORE INTO airports (repter, repter_id) VALUES
+  ('Nagyvárad Reptér', 'LROD'),
+  ('Debrecen Nemzetközi Repülőtér', 'LHDC');
+`).run();
+
+db.prepare(`
+  INSERT OR IGNORE INTO aircrafts (name, type, fogyasztas) VALUES
+  ('HA-ENI', 'Tecnam P2006T', 40),
+  ('HA-ENM', 'Tecnam P2006T', 40),
+  ('HA-ENJ', 'Tecnam P2008JC', 20),
+  ('HA-ENK', 'Tecnam P2008JC', 20),
+  ('HA-ENL', 'Tecnam P2008JC', 20),
+  ('HA-ENY', 'Tecnam P2006T', 40);
+`).run();
+
+
+  db.prepare(`
+    INSERT OR IGNORE INTO statuses (jelkod, jelentes, color) VALUES
+    ('m', 'API szerint zárva', '#cdcdcd'),
+    ('z', 'repülőtér', '#f4b400'),
+    ('n', 'NOTAM', '#fb170f'),
+    ('s', 'korai sötétedés', '#434343'),
+    ('at', 'repülés lemondás (ATO, oktató)', '#f7e55cff'),
+    ('d', 'repülés lemondás (Diák)', '#b04ab7'),
+    ('dh', 'diákok haladási fázisa', '#f8c3f3'),
+    ('cs', 'személyzet csere', '#fae3af'),
+    ('o', 'kevés/nincs elérhető oktató', '#6c7bb1'),
+    ('sz', 'munkaszüneti nap', '#d1a587'),
+    ('a', 'repülésre alkalmatlan időjárás', '#d8736a'),
+    ('k', 'karbantartáson volt', '#8fb2cd'),
+    ('r', 'repült', '#66b65b')
+  `).run();
+
+*/

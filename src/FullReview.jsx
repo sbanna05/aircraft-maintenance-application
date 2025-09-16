@@ -30,7 +30,7 @@ function FullReview({ aircrafts, statuses, schedules, airports }) {
       const yearsSet = new Set();
       schedules.forEach((sch) => {
         if (!sch.event_timestamp) return;
-        const y = parseDateTime(sch.event_timestamp).getFullYear();
+        const y = parseInt(sch.datum.split(".")[0], 10); // "2025.05.12" -> "2025" -> 2025
         yearsSet.add(y);
       });
       return Array.from(yearsSet).sort((a,b) => b - a); // csökkenő sorrend
@@ -53,11 +53,13 @@ function FullReview({ aircrafts, statuses, schedules, airports }) {
     return statusMap[code]?.meaning || "Ismeretlen";
   }
 
+
+
   const usageMap = useMemo(() => {
     const map = {}; // map[datum][hour] = status
     usageData.forEach((r) => {
       if (!r.event_timestamp) return;
-      const [datum, time] = r.event_timestamp.split(" "); // "2025.05.12", "14:00:00"
+      const [datum, time] = [r.datum, r.kezdes]; // "2025.05.12", "14:00:00"
       const startHour = parseInt(time.split(":")[0], 10); // 14
       const endHour = startHour === 23 ? 24 : startHour + 1;
 
@@ -209,11 +211,11 @@ function FullReview({ aircrafts, statuses, schedules, airports }) {
 
 export default FullReview;
 
-
+/*
 function parseDateTime(event_timestamp) {
     const [datumStr, timeStr] = event_timestamp.split(" ");
     // datumStr: "2025.01.01"
     const [y, m, d] = datumStr.split(".").map(Number);
     const [hh, mm, ss] = timeStr.split(":").map(Number);
     return new Date(y, m - 1, d, hh, mm, ss); // hónap 0-indexes!
-  }
+  }*/

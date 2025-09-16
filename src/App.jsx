@@ -13,20 +13,25 @@ function App() {
   const [schedules, setSchedules] = useState([]);
 
   useEffect(() => {
-      async function fetchAll() {
-        const [schedules, aircrafts, airports, statuses] = await Promise.all([
-          window.api.getSchedules(),
-          window.api.getAircrafts(),
-          window.api.getAirports(),
-          window.api.getStatuses(),
-        ]);
-        setSchedules(schedules);
-        setAircrafts(aircrafts);
-        setAirports(airports);
-        setStatuses(statuses);
-      }
-      fetchAll();
-    }, []);
+  async function fetchAll() {
+    try {
+      const [schedules, aircrafts, airports, statuses] = await Promise.all([
+        window.api.getSchedules(),
+        window.api.getAircrafts(),
+        window.api.getAirports(),
+        window.api.getStatuses(),
+      ]);
+      setSchedules(schedules);
+      setAircrafts(aircrafts);
+      setAirports(airports);
+      setStatuses(statuses);
+    } catch (err) {
+      console.error("Hiba az adatok betöltésekor:", err);
+    }
+  }
+  fetchAll();
+}, []);
+
 
   return (
     <>

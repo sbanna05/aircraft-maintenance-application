@@ -1,22 +1,22 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
-  getAircrafts: () => ipcRenderer.invoke('get-aircrafts'),
-  getSchedules: (year, name, filter) => ipcRenderer.invoke('get-schedules',year, name, filter),
-  getStatuses: () => ipcRenderer.invoke('get-statuses'),
-  getAirports: () => ipcRenderer.invoke('get-airports'),
-  getUsers: () => ipcRenderer.invoke('get-users'),
-  getStatsByMonth: (gepAzonosito) => ipcRenderer.invoke('get-stats-by-month', gepAzonosito),
+  getAircrafts: async () =>await ipcRenderer.invoke('get-aircrafts'),
+  getSchedules:async (year, name, filter) => await ipcRenderer.invoke('get-schedules',year, name, filter),
+  getStatuses:async () => await ipcRenderer.invoke('get-statuses'),
+  getAirports:async () => await ipcRenderer.invoke('get-airports'),
+  getUsers:async () => await ipcRenderer.invoke('get-users'),
+  getStatsByMonth:async (gepAzonosito) => await ipcRenderer.invoke('get-stats-by-month', gepAzonosito),
   
-  addAircraft: (name, type, consumption) => ipcRenderer.invoke('add-aircraft', name, type, consumption),
-  addSchedule: (aircraft, airport, event, start, end, note) => ipcRenderer.invoke('add-schedule', aircraft, airport, event, start, end, note),
-  addStatus: (code, description, color) => ipcRenderer.invoke('add-status', code, description, color),
-  addUser: (username, password, role) => ipcRenderer.invoke('add-user', username, password, role),
+  addAircraft:async (name, type, consumption) => await ipcRenderer.invoke('add-aircraft', name, type, consumption),
+  addSchedule:async (aircraft, airport, event, start, end, note) => await ipcRenderer.invoke('add-schedule', aircraft, airport, event, start, end, note),
+  addStatus:async (code, description, color) => await ipcRenderer.invoke('add-status', code, description, color),
+  addUser:async (username, password, role) => await ipcRenderer.invoke('add-user', username, password, role),
 
-  updateSchedule: (id, updateData) => ipcRenderer.invoke('update-schedule', id, updateData),
+  updateSchedule:async (id, updateData) => await ipcRenderer.invoke('update-schedule', id, updateData),
 
-  deleteAircraft: (id) => ipcRenderer.invoke('delete-aircraft', id),
-  deleteSchedule: (id) => ipcRenderer.invoke('delete-schedule', id),
-  deleteStatus: (id) => ipcRenderer.invoke('delete-status', id),
+  deleteAircraft:async (id) => await ipcRenderer.invoke('delete-aircraft', id),
+  deleteSchedule:async (id) => await ipcRenderer.invoke('delete-schedule', id),
+  deleteStatus:async (id) => await ipcRenderer.invoke('delete-status', id),
 
 });

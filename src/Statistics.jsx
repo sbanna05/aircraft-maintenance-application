@@ -35,14 +35,7 @@ function Statistics({ selectedAircraft, statuses, schedules, airports, year }) {
     fetchStats();
   }, [selectedAircraft]);
 
-  function parseDateTime(event_timestamp) {
-    const [datumStr, timeStr] = event_timestamp.split(" ");
-    // datumStr: "2025.01.01"
-    const [y, m, d] = datumStr.split(".").map(Number);
-    const [hh, mm, ss] = timeStr.split(":").map(Number);
-    return new Date(y, m - 1, d, hh, mm, ss); // hónap 0-indexes!
-  }
-
+  
   function getOpeningRule(airportname, datum) {
     const defaultHours = {
       hetvege: { open: 9, close: 14 },
@@ -120,13 +113,18 @@ function Statistics({ selectedAircraft, statuses, schedules, airports, year }) {
     //console.log("year:", year);
     schedules
       .filter((sch) => {
-        const dt = parseDateTime(sch.event_timestamp);
-        return dt.getMonth() === monthIdx && dt.getFullYear() === year && sch.aircraft === selectedAircraft;
+        if (!sch.datum || !sch.kezdes) return false;
+        const [y,m,d] = sch.datum.split("-").map(Number);
+        return y === year && m - 1 === monthIdx && sch.aircraft === selectedAircraft;
       })
       .forEach((sch) => {
-        const dt = parseDateTime(sch.event_timestamp);
+        const [y,m,d] = sch.datum.split("-").map(Number);
+        const [hh,mm,ss] = sch.kezdes.split(":").map(Number);
+        const dt = new Date(y, m - 1, d, hh, mm, ss); // hónap 0-indexes!        
         const rule = getOpeningRule(dominantAirport, dt);
         const inside = isWithinOpening(dt, rule);
+
+        console.log("Sch:", sch.datum, sch.kezdes, "->", dt, "Rule:", rule, "Inside:", inside);
 
         if (inside) {
           statusInOpening[sch.status] = (statusInOpening[sch.status] || 0) + 1;
@@ -144,7 +142,7 @@ function Statistics({ selectedAircraft, statuses, schedules, airports, year }) {
     const totalOpenHours = weekdays * weekdayHours + weekends * weekendHours;
     const closedHours = daysInMonth * 24 - totalOpenHours;
 
-    const notamHours = statusCounts["n"] || 0;
+    const notamHours = Number(statusCounts["n"] || 0);
     const availableHours = totalOpenHours - notamHours;
 
     const summary = {
@@ -160,7 +158,7 @@ function Statistics({ selectedAircraft, statuses, schedules, airports, year }) {
     const rows = statuses
       .filter((s) => !["n", "-"].includes(s.jelkod))
       .map((s) => {
-        const count = statusCounts[s.jelkod] || 0;
+        const count = Number(statusCounts[s.jelkod] || 0);
         const percent = availableHours
           ? ((count / availableHours) * 100).toFixed(1)
           : 0;
