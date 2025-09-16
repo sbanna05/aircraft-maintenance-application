@@ -108,21 +108,22 @@ npm run start
 
 Lehetővé teszi hogy kiválasszuk a gépeket, repteret, eventstátuszt, kezdő vég időpontot és opcionális megjegyzést
 A kezdőidőpont beírása után automatikusan kitölti a végidőpontot kezdés +1 órával
-Egyszerre nagyobb intervallumban is be lehet illeszteni eseményeket, ha nyitvatartási időn kívülre esik, felugró ablak jelenik meg, hogy biztonsan be akarjuk e szúrni az eseményt. Ugyanez történik hogyha már létező esemény idejére akarunk beilleszteni egy másikat.
+Egyszerre nagyobb intervallumban is be lehet illeszteni eseményeket, ha nyitvatartási időn kívülre esik, felugró ablak jelenik meg, hogy biztonsan be akarjuk e szúrni az eseményt. 
+Ugyanez történik hogyha már létező esemény idejére akarunk beilleszteni egy másikat.
 
 ## Statisztika - Fullreview.jsx és Statistics.jsx
+<img width="1570" height="904" alt="ad_2" src="https://github.com/user-attachments/assets/c1d152e6-1059-40c5-8486-3acc99e391e1" />
 
-![stat](https://github.com/sbanna05/aircraft-maintenance-application/blob/main/images/ad_2.png)
 
 Hónapos naptárkalendárium megjelenítés - hoverrel kiirja a jelentést is
 
-![calendar](https://github.com/sbanna05/aircraft-maintenance-application/blob/main/images/ad_3.png)
+<img width="1893" height="937" alt="ad_3" src="https://github.com/user-attachments/assets/368948fc-b064-43a3-bbff-8ef588ecaac3" />
 
 ## Szerkesztő felület - Editor.jsx
 
 Hozzá lehet adni plusz eseményt/gépet/usert, a táblázat azzonnal frissül
+<img width="1820" height="914" alt="ad_4" src="https://github.com/user-attachments/assets/6c703efd-7d2d-4ef0-be89-146370d88a57" />
 
-![editor](https://github.com/sbanna05/aircraft-maintenance-application/blob/main/images/ad_4.png)
 
 ### Adatbázis -> mariadb  létrehozás
 
