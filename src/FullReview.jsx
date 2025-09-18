@@ -81,7 +81,7 @@ function FullReview({ aircrafts, statuses, schedules, airports }) {
           ? defaultOpening.hetvege
           : defaultOpening.hetkoznap;
       for (let h = 0; h < 24; h++) {
-        if (h <= rule.open || h >= rule.close) {
+        if (h <= rule.open || h > rule.close) {
           if (!map[datum][h]) map[datum][h] = "-";
         }
       }

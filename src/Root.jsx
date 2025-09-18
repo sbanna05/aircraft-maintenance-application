@@ -17,7 +17,7 @@ function AuthedApp({ onLogout }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const last = sessionStorage.getItem("lastRoute");
+    let last = sessionStorage.getItem("lastRoute");
     if (!last || last.startsWith("/login")) {
       last = "/statistics";
     }

@@ -24,8 +24,15 @@
       "preload.js",
       "package.json"
     ],
+    "forceCodeSigning": false,
     "directories": {
       "buildResources": "assets"
+    },
+    "win": {
+      "icon": "assets/plane.ico",
+      "target": [
+        "nsis"
+      ]
     }
   },
   "dependencies": {
