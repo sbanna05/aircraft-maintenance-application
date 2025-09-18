@@ -96,6 +96,17 @@ npm run dev
 ```bash
 npm run build
 ```
+amire figyelni kell:
+```bash
+ const isDev = !app.isPackaged;
+ if (isDev) {
+   win.loadFile(path.join(__dirname, 'dist', 'index.html'));  //<-- ezt töltse be
+} else {
+  win.loadURL('http://localhost:5173');
+  }
+}
+```
+Miután lefutott létre jön a dist mappa, ahol megtalálható az Aircraft Maintenance Application Setup.exe, ami megnyitásával elindul az asztali alkalmazás telepítése.
 
 ### kész build futtatása
 
